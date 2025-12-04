@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLAYER vs. STRES: The Mental Ping Pong (VFX BOOST)</title>
+    <title>PLAYER vs. STRES: The Mental Ping Pong (V26.7 Performa)</title>
     <style>
-        /* 🚨 V26.6 - Stabilisasi Startup Responsif */
+        /* 🚨 V26.7 - Optimasi Performa */
         
         /* WARNA PALET */
         :root {
@@ -206,18 +206,14 @@
 
         .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
+            /* Ukuran partikel sekarang diatur di JS */
             border-radius: 50%;
             background-color: var(--color-ball);
             opacity: 0;
             transform: scale(0);
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+            /* Transisi harus tetap ada untuk efek memudar */
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out; 
             box-shadow: 0 0 5px var(--color-ball);
-        }
-        .particle-show {
-            opacity: 0.8;
-            transform: scale(1);
         }
 
 
@@ -366,6 +362,11 @@
     let gameBoardWidth;
     let gameBoardHeight;
 
+    // 🚩 V26.7: PARTICLE POOLING
+    const MAX_PARTICLES = 30; // Batasi partikel yang ada di DOM
+    let particlePool = [];
+    let particleIndex = 0;
+
     // State Paddle (Nilai relatif terhadap BASE_BOARD_WIDTH)
     let playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
     let opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
@@ -389,23 +390,24 @@
     // State Game
     let isGameRunning = false; 
     let isPaused = true;
-    let lastTimestamp = 0; 
+    
+    // 🚩 V26.7: FPS Throttling Variables
+    const TARGET_FPS = 60;
+    const FRAME_INTERVAL = 1000 / TARGET_FPS; 
+    let then = 0;
     
     let particleInterval; 
 
     // --- FUNGSI UTILITY: MENGHITUNG ULANG DIMENSI DAN POSISI ---
 
     function recalculateDimensions() {
-        // Ambil dimensi papan yang sudah diskalakan oleh CSS (vw/max-width)
         gameBoardRect = gameBoard.getBoundingClientRect();
         gameBoardWidth = gameBoardRect.width;
         gameBoardHeight = gameBoardRect.height;
         
-        // Faktor skala
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT; 
         
-        // 1. Paddle & Ball (Mengatur ukuran fisik yang diskalakan)
         bottomPaddle.style.width = `${paddleWidth * scaleX}px`;
         bottomPaddle.style.height = `${paddleHeight * scaleY}px`;
         topPaddle.style.width = `${paddleWidth * scaleX}px`;
@@ -414,16 +416,14 @@
         ballElement.style.width = `${ballSize * scaleX}px`;
         ballElement.style.height = `${ballSize * scaleX}px`; 
 
-        // 2. Posisi Tetap (bottom/top offset)
         const bottomOffset = 20 * scaleY;
         bottomPaddle.style.bottom = `${bottomOffset}px`;
         topPaddle.style.top = `${bottomOffset}px`; 
         
-        // 3. Posisi Dinamis (playerX, opponentX, ballX, ballY)
         bottomPaddle.style.left = `${playerX * scaleX}px`;
         topPaddle.style.left = `${opponentX * scaleX}px`;
         
-        if (ballElement.style.opacity != 0) { // Hanya update posisi bola jika terlihat
+        if (ballElement.style.opacity != 0) {
              ballElement.style.left = `${ballX * scaleX}px`;
              ballElement.style.top = `${ballY * scaleY}px`;
         }
@@ -441,37 +441,65 @@
         topPaddle.classList.remove('paddle-trail-stress');
     }
 
-    function createBallParticle() {
+    /**
+     * 🚩 V26.7: Inisialisasi pool partikel.
+     */
+    function initializeParticlePool() {
+        // Hapus partikel lama jika ada
+        particleContainer.innerHTML = '';
+        particlePool = [];
+        particleIndex = 0;
+        
+        for (let i = 0; i < MAX_PARTICLES; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.opacity = '0';
+            p.style.transform = 'scale(0.1)';
+            particleContainer.appendChild(p);
+            particlePool.push(p);
+        }
+    }
+    
+    /**
+     * 🚩 V26.7: Menggunakan partikel dari pool.
+     */
+    function usePooledParticle() {
         if (!isGameRunning || isPaused) return;
+        
+        const p = particlePool[particleIndex];
+        particleIndex = (particleIndex + 1) % MAX_PARTICLES; 
+        
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
+        const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT; 
         
-        const p = document.createElement('div');
-        p.className = 'particle';
         const size = Math.random() * 3 + 2; 
-        
         p.style.width = `${size * scaleX}px`;
         p.style.height = `${size * scaleX}px`;
         p.style.boxShadow = `0 0 ${size * scaleX}px var(--color-ball)`;
 
         const x = ballX * scaleX + ballSize * scaleX / 2 - (size * scaleX / 2); 
-        const y = ballY * gameBoardHeight / BASE_BOARD_HEIGHT + ballSize * scaleX / 2 - (size * scaleX / 2); 
+        const y = ballY * scaleY + ballSize * scaleX / 2 - (size * scaleX / 2); 
         
         p.style.left = `${x}px`;
         p.style.top = `${y}px`;
         
-        particleContainer.appendChild(p);
-
-        setTimeout(() => { p.classList.add('particle-show'); }, 10);
+        // Reset transisi agar posisi langsung terupdate
+        p.style.transition = 'none';
+        p.style.opacity = '0.8';
+        p.style.transform = 'scale(1)';
+        
+        // Memicu transisi menghilang pada frame berikutnya
         setTimeout(() => {
-            p.style.opacity = '0';
-            p.style.transform = 'scale(0.1)';
-            setTimeout(() => { p.remove(); }, 500);
-        }, 150); 
+             p.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out';
+             p.style.opacity = '0';
+             p.style.transform = 'scale(0.1)';
+        }, 50); 
     }
 
     function startParticleTrail() {
         if (particleInterval) clearInterval(particleInterval);
-        particleInterval = setInterval(createBallParticle, 30); 
+        // Ganti createBallParticle dengan usePooledParticle
+        particleInterval = setInterval(usePooledParticle, 30); 
     }
 
     function stopParticleTrail() {
@@ -560,15 +588,14 @@
         resetInputState(); 
         stopParticleTrail(); 
 
-        // Reset posisi relatif
-        ballX = (BASE_BOARD_WIDTH / 3) - (ballSize / 3);
+        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
         ballY = BASE_STARTING_BALL_Y; 
         ballSpeedX = 0;
         ballSpeedY = 0;
-        playerX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3);
-        opponentX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3); 
+        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
         
-        recalculateDimensions(); // Terapkan posisi relatif ke elemen DOM yang diskalakan
+        recalculateDimensions(); 
         ballElement.classList.remove('ball-explosion-vfx'); 
         ballElement.style.opacity = 1; 
 
@@ -583,7 +610,7 @@
                     countdownDisplay.style.display = 'none';
                     launchBall(directionTo, playerScore); 
                     startParticleTrail(); 
-                    lastTimestamp = 0; 
+                    then = 0; // Reset then untuk gameLoop
                     requestAnimationFrame(gameLoop);
                 }, 500); 
             }
@@ -603,16 +630,16 @@
         countdownDisplay.style.display = 'block';
         
         setTimeout(() => {
-            ballX = (BASE_BOARD_WIDTH / 3) - (ballSize / 3);
+            ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
             ballY = BASE_STARTING_BALL_Y; 
             
             ballElement.classList.remove('ball-explosion-vfx');
             ballElement.style.opacity = 1; 
             
-            playerX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3);
-            opponentX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3); 
+            playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+            opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
             
-            recalculateDimensions(); // Terapkan posisi baru
+            recalculateDimensions(); 
         }, 200); 
 
         countdownDisplay.textContent = '1';
@@ -626,7 +653,7 @@
                 launchBall(directionTo, currentScore); 
                 startParticleTrail(); 
                 
-                lastTimestamp = 0;
+                then = 0; // Reset then untuk gameLoop
                 requestAnimationFrame(gameLoop);
             }, 500); 
         }, 1000); 
@@ -646,10 +673,10 @@
         
         isPaused = false;
         isGameRunning = true;
-        lastTimestamp = 0; 
+        then = 0; 
     }
 
-    // --- FUNGSI RESET GAME (Modifikasi) ---
+    // --- FUNGSI RESET GAME ---
 
     function resetGame() {
         isGameRunning = false;
@@ -665,38 +692,28 @@
         
         resetInputState(); 
         
-        particleContainer.innerHTML = '';
         stopParticleTrail(); 
 
-        // Posisi awal relatif
-        ballX = (BASE_BOARD_WIDTH / 3) - (ballSize / 3);
+        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
         ballY = BASE_STARTING_BALL_Y; 
-        playerX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3);
-        opponentX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3); 
+        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
         
-        recalculateDimensions(); // Terapkan posisi awal
+        recalculateDimensions(); 
         
         startCountdown(1); 
     }
     
-    // --- UPDATE GAME OBJECTS (Menggunakan nilai BASE dan diterapkan ke DOM setelah diskalakan) ---
+    // --- UPDATE GAME OBJECTS ---
 
     function updatePlayer(deltaTime) {
         const actualSpeed = FIXED_PADDLE_SPEED * deltaTime / 1000; 
         
-        if (keys['ArrowLeft']) {
-            playerX -= actualSpeed;
-        }
-        if (keys['ArrowRight']) {
-            playerX += actualSpeed;
-        }
+        if (keys['ArrowLeft']) { playerX -= actualSpeed; }
+        if (keys['ArrowRight']) { playerX += actualSpeed; }
 
-        if (playerX < 0) {
-            playerX = 0;
-        }
-        if (playerX > BASE_BOARD_WIDTH - paddleWidth) {
-            playerX = BASE_BOARD_WIDTH - paddleWidth;
-        }
+        if (playerX < 0) { playerX = 0; }
+        if (playerX > BASE_BOARD_WIDTH - paddleWidth) { playerX = BASE_BOARD_WIDTH - paddleWidth; }
         
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         bottomPaddle.style.left = `${playerX * scaleX}px`;
@@ -711,19 +728,12 @@
         const margin = 2; 
 
         if (ballSpeedY < 0) { 
-            if (ballCenter < opponentCenter - margin) {
-                opponentX -= aiSpeed;
-            } else if (ballCenter > opponentCenter + margin) {
-                opponentX += aiSpeed;
-            }
+            if (ballCenter < opponentCenter - margin) { opponentX -= aiSpeed; } 
+            else if (ballCenter > opponentCenter + margin) { opponentX += aiSpeed; }
         }
         
-        if (opponentX < 0) {
-            opponentX = 0;
-        }
-        if (opponentX > BASE_BOARD_WIDTH - paddleWidth) {
-            opponentX = BASE_BOARD_WIDTH - paddleWidth;
-        }
+        if (opponentX < 0) { opponentX = 0; }
+        if (opponentX > BASE_BOARD_WIDTH - paddleWidth) { opponentX = BASE_BOARD_WIDTH - paddleWidth; }
 
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         topPaddle.style.left = `${opponentX * scaleX}px`;
@@ -736,7 +746,7 @@
         ballX += moveX;
         ballY += moveY;
         
-        // Tabrakan & Skor menggunakan BASE DIMENSIONS
+        // Tabrakan Dinding Kiri/Kanan
         if (ballX < 0 || ballX > BASE_BOARD_WIDTH - ballSize) {
             ballSpeedX *= -1;
             ballX = ballX < 0 ? 0 : BASE_BOARD_WIDTH - ballSize; 
@@ -782,7 +792,7 @@
             playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
             opponentSpeedMultiplier += SPEED_INCREMENT_PER_POINT;
             if (playerScore >= maxScore) {
-                gameOver(`KAMU berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
+                gameOver(`FOKUS berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
             } else {
                 launchTransition(1); 
             }
@@ -824,7 +834,7 @@
         stopParticleTrail(); 
         
         const finalMessageText = message.includes("menang") ? 
-            "✨ KEMENANGAN PLAYER! ✨" : 
+            "✨ KEMENANGAN FOKUS! ✨" : 
             "🚨 DIKUASAI STRES! 🚨";
             
         messageText.textContent = finalMessageText;
@@ -839,15 +849,20 @@
             return; 
         }
         
-        if (lastTimestamp === 0) {
-            lastTimestamp = timestamp;
-        }
-        let deltaTime = timestamp - lastTimestamp;
-        lastTimestamp = timestamp; 
+        // 🚩 V26.7: FPS Throttling
+        if (then === 0) then = timestamp;
+        const elapsed = timestamp - then;
 
-        if (deltaTime > 50) {
-            deltaTime = 50; 
+        if (elapsed < FRAME_INTERVAL) {
+            requestAnimationFrame(gameLoop);
+            return;
         }
+
+        // Hitung ulang 'then' untuk menghindari pergerakan yang tersentak-sentak
+        then = timestamp - (elapsed % FRAME_INTERVAL); 
+        
+        // Gunakan FRAME_INTERVAL sebagai deltaTime
+        let deltaTime = FRAME_INTERVAL;
 
         updatePlayer(deltaTime);
         updateOpponent(deltaTime);
@@ -859,13 +874,11 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- MULAI GAME (Perbaikan Startup di V26.6) ---
+    // --- MULAI GAME ---
     
-    // Pastikan DOM sudah dimuat sepenuhnya sebelum menghitung dimensi dan memulai game
     window.addEventListener('DOMContentLoaded', () => {
-        // Ambil dimensi awal sebelum game dimulai
         recalculateDimensions(); 
-        // Mulai game loop dan countdown
+        initializeParticlePool(); // Inisialisasi pool partikel
         resetGame(); 
     });
 </script>
