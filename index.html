@@ -561,12 +561,12 @@
         stopParticleTrail(); 
 
         // Reset posisi relatif
-        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+        ballX = (BASE_BOARD_WIDTH / 3) - (ballSize / 3);
         ballY = BASE_STARTING_BALL_Y; 
         ballSpeedX = 0;
         ballSpeedY = 0;
-        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
-        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+        playerX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3);
+        opponentX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3); 
         
         recalculateDimensions(); // Terapkan posisi relatif ke elemen DOM yang diskalakan
         ballElement.classList.remove('ball-explosion-vfx'); 
@@ -603,14 +603,14 @@
         countdownDisplay.style.display = 'block';
         
         setTimeout(() => {
-            ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+            ballX = (BASE_BOARD_WIDTH / 3) - (ballSize / 3);
             ballY = BASE_STARTING_BALL_Y; 
             
             ballElement.classList.remove('ball-explosion-vfx');
             ballElement.style.opacity = 1; 
             
-            playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
-            opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+            playerX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3);
+            opponentX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3); 
             
             recalculateDimensions(); // Terapkan posisi baru
         }, 200); 
@@ -669,10 +669,10 @@
         stopParticleTrail(); 
 
         // Posisi awal relatif
-        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+        ballX = (BASE_BOARD_WIDTH / 3) - (ballSize / 3);
         ballY = BASE_STARTING_BALL_Y; 
-        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
-        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+        playerX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3);
+        opponentX = (BASE_BOARD_WIDTH / 3) - (paddleWidth / 3); 
         
         recalculateDimensions(); // Terapkan posisi awal
         
@@ -782,7 +782,7 @@
             playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
             opponentSpeedMultiplier += SPEED_INCREMENT_PER_POINT;
             if (playerScore >= maxScore) {
-                gameOver(`FOKUS berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
+                gameOver(`KAMU berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
             } else {
                 launchTransition(1); 
             }
@@ -824,7 +824,7 @@
         stopParticleTrail(); 
         
         const finalMessageText = message.includes("menang") ? 
-            "✨ KEMENANGAN FOKUS! ✨" : 
+            "✨ KEMENANGAN PLAYER! ✨" : 
             "🚨 DIKUASAI STRES! 🚨";
             
         messageText.textContent = finalMessageText;
