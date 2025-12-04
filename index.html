@@ -201,7 +201,7 @@
         }
 
         /* ---------------- PARTIKEL JALUR BOLA ---------------- */
-     /*   #particle-container {
+        #particle-container {
             position: absolute;
             top: 0;
             left: 0;
@@ -221,7 +221,7 @@
             /* V26.11: HANYA transisi opacity untuk memudar */
             transition: opacity 0.5s ease-out; 
             box-shadow: 0 0 15px var(--color-ball);
-        }*/
+        }
 
         /* ---------------- DISPLAY & SCREEN (Tidak Berubah) ---------------- */
         #countdown-display {
@@ -493,12 +493,12 @@
 
         // 🚩 V26.12: Koreksi Posisi Mundur
         // Partikel ditempatkan sedikit di belakang bola
-        const correctionFactor = 0.015; // Jeda 15 milidetik (kurang dari 1 frame)
+    //    const correctionFactor = 0.015; // Jeda 15 milidetik (kurang dari 1 frame)
         const moveXCorrection = ballSpeedX * correctionFactor;
         const moveYCorrection = ballSpeedY * correctionFactor;
         
         const correctedBallX = ballX - moveXCorrection;
-        const correctedBallY = ballY - moveYCorrection;
+        const correctedBallY = ballY - moveYCorrection; //
 
         // Hitung posisi Translate yang dikoreksi
         const translateX = correctedBallX * scaleX + ballSize * scaleX / 2 - (size * scaleX / 2); 
