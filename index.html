@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLAYER vs. STRES: The Mental Ping Pong (VFX BOOST)</title>
     <style>
-        /* 🚨 V26.5 - Pembaruan Responsif untuk Smartphone */
+        /* 🚨 V26.6 - Stabilisasi Startup Responsif */
         
         /* WARNA PALET */
         :root {
@@ -39,18 +39,16 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            /* 🚩 V26.5: Menggunakan min-height agar konten tidak terpotong di perangkat seluler */
             min-height: 100vh;
             margin: 0;
             background-color: var(--color-bg-dark);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            overflow-x: hidden; /* Mencegah scroll horizontal */
+            overflow-x: hidden; 
             color: var(--color-text);
-            padding: 10px 0; /* Tambahkan sedikit padding vertikal */
+            padding: 10px 0; 
         }
         
         #info-bar {
-            /* 🚩 V26.5: Mengubah fixed width menjadi persentase + max-width */
             width: 90vw;
             max-width: 500px;
             display: flex;
@@ -67,9 +65,8 @@
         }
 
         #game-board {
-            /* 🚩 V26.5: Menggunakan vw (viewport width) agar responsif */
             width: 90vw; 
-            height: 126vw; /* 90vw * (700/500) = 126vw (mempertahankan rasio 500:700) */
+            height: 126vw; 
             max-width: 500px;
             max-height: 700px;
             
@@ -117,7 +114,6 @@
         /* ---------------- PADDLE ATAS (STRES) ---------------- */
         #top-paddle {
             position: absolute;
-            /* Ukuran paddle dan bola akan diatur di JavaScript */
             top: 20px; 
             width: 80px;
             height: 15px;
@@ -232,14 +228,13 @@
             left: 50%;
             transform: translate(-50%, -50%); 
             color: var(--color-ball);
-            /* 🚩 V26.5: Font size tetap besar */
             font-size: 5em; 
             font-weight: bold;
             text-shadow: 0 0 20px var(--color-ball);
             z-index: 300;
             display: none; 
         }
-        
+
         #game-message {
             position: absolute;
             top: 0;
@@ -282,7 +277,6 @@
 
         /* KONTROL LAYAR SENTUH (Touch Controls) */
         #touch-controls {
-            /* 🚩 V26.5: Mengikuti lebar papan game */
             width: 90vw;
             max-width: 500px;
             display: flex;
@@ -359,8 +353,7 @@
     const leftButton = document.getElementById('left-button');
     const rightButton = document.getElementById('right-button');
     
-    // Ukuran Papan (Didefinisikan relatif terhadap dimensi aslinya)
-    // Nilai-nilai ini adalah dimensi target yang akan diskalakan
+    // Ukuran Papan Dasar
     const BASE_BOARD_WIDTH = 500;
     const BASE_BOARD_HEIGHT = 700;
     const paddleWidth = 80;
@@ -368,19 +361,19 @@
     const ballSize = 15;
     const BASE_STARTING_BALL_Y = (BASE_BOARD_HEIGHT / 3) - (ballSize / 3); 
 
-    // Variabel yang akan dihitung ulang saat game dimulai atau diubah ukurannya
+    // Variabel Dimensi/Posisi Aktual yang Diperlukan untuk Skala
     let gameBoardRect;
     let gameBoardWidth;
     let gameBoardHeight;
 
-    // State Paddle
-    let playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); // Nilai relatif
-    let opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); // Nilai relatif
+    // State Paddle (Nilai relatif terhadap BASE_BOARD_WIDTH)
+    let playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+    let opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
     const FIXED_PADDLE_SPEED = 800; 
     let keys = {}; 
     
-    // State Bola
-    let ballX, ballY; // Nilai relatif
+    // State Bola (Nilai relatif terhadap BASE_BOARD_DIMENSIONS)
+    let ballX, ballY; 
     let ballSpeedX, ballSpeedY; 
     const initialBallSpeed = 500; 
     
@@ -403,64 +396,43 @@
     // --- FUNGSI UTILITY: MENGHITUNG ULANG DIMENSI DAN POSISI ---
 
     function recalculateDimensions() {
+        // Ambil dimensi papan yang sudah diskalakan oleh CSS (vw/max-width)
         gameBoardRect = gameBoard.getBoundingClientRect();
         gameBoardWidth = gameBoardRect.width;
         gameBoardHeight = gameBoardRect.height;
         
-        // Faktor skala (digunakan untuk mengkonversi nilai piksel dasar ke piksel nyata)
+        // Faktor skala
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT; 
         
-        // 1. Paddle & Ball (Menggunakan Style.width/height)
+        // 1. Paddle & Ball (Mengatur ukuran fisik yang diskalakan)
         bottomPaddle.style.width = `${paddleWidth * scaleX}px`;
         bottomPaddle.style.height = `${paddleHeight * scaleY}px`;
         topPaddle.style.width = `${paddleWidth * scaleX}px`;
         topPaddle.style.height = `${paddleHeight * scaleY}px`;
         
         ballElement.style.width = `${ballSize * scaleX}px`;
-        ballElement.style.height = `${ballSize * scaleX}px`; // Gunakan scaleX untuk dimensi bola agar tetap bulat
+        ballElement.style.height = `${ballSize * scaleX}px`; 
 
-        // 2. Posisi (Menggunakan style.left/top/bottom)
-        // Posisi bottom paddle tetap 20px dari bawah (relatif terhadap BASE_BOARD_HEIGHT)
+        // 2. Posisi Tetap (bottom/top offset)
         const bottomOffset = 20 * scaleY;
         bottomPaddle.style.bottom = `${bottomOffset}px`;
         topPaddle.style.top = `${bottomOffset}px`; 
         
-        // 3. Konversi posisi relatif (playerX, opponentX, ballX, ballY) ke piksel nyata
-        // Posisi X harus diskalakan
+        // 3. Posisi Dinamis (playerX, opponentX, ballX, ballY)
         bottomPaddle.style.left = `${playerX * scaleX}px`;
         topPaddle.style.left = `${opponentX * scaleX}px`;
         
-        // Posisi Y harus diskalakan
-        if (!isGameRunning && isPaused) {
+        if (ballElement.style.opacity != 0) { // Hanya update posisi bola jika terlihat
              ballElement.style.left = `${ballX * scaleX}px`;
              ballElement.style.top = `${ballY * scaleY}px`;
         }
     }
     
-    // Panggil saat halaman dimuat
-    window.addEventListener('load', recalculateDimensions);
-    // Panggil saat ukuran jendela diubah (misalnya rotasi layar)
     window.addEventListener('resize', recalculateDimensions);
-    
-    // Panggil recalculate dimensions saat resetGame untuk memastikan posisi awal bola dan paddle benar
-    const originalResetGame = resetGame;
-    resetGame = function() {
-        originalResetGame();
-        
-        // Posisi relatif di reset
-        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
-        ballY = BASE_STARTING_BALL_Y; 
-        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
-        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
-        
-        recalculateDimensions(); // Terapkan posisi relatif ke elemen DOM yang diskalakan
-        
-        startCountdown(1);
-    }
-    
-    // --- FUNGSI VFX ---
-    // ... (Tidak ada perubahan signifikan pada logika VFX, hanya perlu diingat semua perhitungan posisi harus menggunakan gameBoardWidth/Height yang baru) ...
+
+
+    // --- FUNGSI VFX & UTILITY LAINNYA ---
     
     function resetInputState() {
         keys['ArrowLeft'] = false;
@@ -469,24 +441,20 @@
         topPaddle.classList.remove('paddle-trail-stress');
     }
 
-    // [FUNGSI VFX LAINNYA TIDAK BERUBAH LOGIKANYA, HANYA DIPERSINGKAT UNTUK DEMO]
-
     function createBallParticle() {
         if (!isGameRunning || isPaused) return;
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
-        const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT; 
         
         const p = document.createElement('div');
         p.className = 'particle';
-        
         const size = Math.random() * 3 + 2; 
+        
         p.style.width = `${size * scaleX}px`;
         p.style.height = `${size * scaleX}px`;
         p.style.boxShadow = `0 0 ${size * scaleX}px var(--color-ball)`;
 
-        // Posisi partikel (harus diskalakan)
         const x = ballX * scaleX + ballSize * scaleX / 2 - (size * scaleX / 2); 
-        const y = ballY * scaleY + ballSize * scaleY / 2 - (size * scaleX / 2); // Gunakan scaleX untuk size partikel
+        const y = ballY * gameBoardHeight / BASE_BOARD_HEIGHT + ballSize * scaleX / 2 - (size * scaleX / 2); 
         
         p.style.left = `${x}px`;
         p.style.top = `${y}px`;
@@ -535,12 +503,13 @@
     }
     
     function updateBallVFX() {
-        // [Logika yang sama]
+        // ... (Logika yang sama) ...
     }
 
     function updatePaddleTrail() {
-        // [Logika yang sama]
+        // ... (Logika yang sama) ...
     }
+
 
     // --- INPUT PEMAIN (Player Input) ---
     
@@ -548,8 +517,6 @@
         if (!isGameRunning || isPaused) return; 
         keys[key] = value;
     }
-
-    // [LOGIKA INPUT TIDAK BERUBAH]
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') { setMovement('ArrowLeft', true); } 
@@ -583,8 +550,6 @@
 
 
     // --- FUNGSI COUNTDOWN & TRANSISI ---
-    
-    // [Fungsi-fungsi ini disederhanakan, tapi harus memanggil recalculateDimensions]
 
     function startCountdown(directionTo) {
         isGameRunning = false;
@@ -595,19 +560,17 @@
         resetInputState(); 
         stopParticleTrail(); 
 
+        // Reset posisi relatif
         ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
         ballY = BASE_STARTING_BALL_Y; 
         ballSpeedX = 0;
         ballSpeedY = 0;
-        
-        recalculateDimensions(); // Posisi ball/paddle diperbarui
-        ballElement.classList.remove('ball-explosion-vfx'); 
-        ballElement.style.opacity = 1; 
-        
         playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
         opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
         
-        recalculateDimensions(); // Posisi paddle diperbarui
+        recalculateDimensions(); // Terapkan posisi relatif ke elemen DOM yang diskalakan
+        ballElement.classList.remove('ball-explosion-vfx'); 
+        ballElement.style.opacity = 1; 
 
         const countdownInterval = setInterval(() => {
             if (count > 0) {
@@ -645,12 +608,12 @@
             
             ballElement.classList.remove('ball-explosion-vfx');
             ballElement.style.opacity = 1; 
+            
+            playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+            opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+            
             recalculateDimensions(); // Terapkan posisi baru
         }, 200); 
-
-        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
-        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
-        recalculateDimensions(); // Terapkan posisi paddle baru
 
         countdownDisplay.textContent = '1';
 
@@ -686,7 +649,37 @@
         lastTimestamp = 0; 
     }
 
-    // --- UPDATE GAME OBJECTS ---
+    // --- FUNGSI RESET GAME (Modifikasi) ---
+
+    function resetGame() {
+        isGameRunning = false;
+        isPaused = true;
+        playerScore = 0;
+        opponentScore = 0;
+        playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
+        opponentScoreElement.textContent = `STRES (Musuh): ${opponentScore}`;
+        
+        opponentSpeedMultiplier = 1.0; 
+        
+        gameMessage.style.display = 'none';
+        
+        resetInputState(); 
+        
+        particleContainer.innerHTML = '';
+        stopParticleTrail(); 
+
+        // Posisi awal relatif
+        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+        ballY = BASE_STARTING_BALL_Y; 
+        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+        
+        recalculateDimensions(); // Terapkan posisi awal
+        
+        startCountdown(1); 
+    }
+    
+    // --- UPDATE GAME OBJECTS (Menggunakan nilai BASE dan diterapkan ke DOM setelah diskalakan) ---
 
     function updatePlayer(deltaTime) {
         const actualSpeed = FIXED_PADDLE_SPEED * deltaTime / 1000; 
@@ -701,11 +694,10 @@
         if (playerX < 0) {
             playerX = 0;
         }
-        if (playerX > BASE_BOARD_WIDTH - paddleWidth) { // Menggunakan BASE_BOARD_WIDTH
+        if (playerX > BASE_BOARD_WIDTH - paddleWidth) {
             playerX = BASE_BOARD_WIDTH - paddleWidth;
         }
         
-        // Terapkan posisi yang diskalakan
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         bottomPaddle.style.left = `${playerX * scaleX}px`;
     }
@@ -729,11 +721,10 @@
         if (opponentX < 0) {
             opponentX = 0;
         }
-        if (opponentX > BASE_BOARD_WIDTH - paddleWidth) { // Menggunakan BASE_BOARD_WIDTH
+        if (opponentX > BASE_BOARD_WIDTH - paddleWidth) {
             opponentX = BASE_BOARD_WIDTH - paddleWidth;
         }
 
-        // Terapkan posisi yang diskalakan
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         topPaddle.style.left = `${opponentX * scaleX}px`;
     }
@@ -745,59 +736,48 @@
         ballX += moveX;
         ballY += moveY;
         
-        // 🚨 V26.5: Semua perhitungan tabrakan masih menggunakan nilai BASE
-        // (Ini menyederhanakan kode karena kita tidak perlu menskalakan kecepatan dan posisi setiap frame)
-
-        // 1. Tabrakan Dinding Kiri/Kanan
+        // Tabrakan & Skor menggunakan BASE DIMENSIONS
         if (ballX < 0 || ballX > BASE_BOARD_WIDTH - ballSize) {
             ballSpeedX *= -1;
             ballX = ballX < 0 ? 0 : BASE_BOARD_WIDTH - ballSize; 
         }
 
-        // 2. Tabrakan Paddle Bawah (PLAYER)
-        const paddleBottomY = BASE_BOARD_HEIGHT - 20 - paddleHeight; // Posisi Y bawah paddle (relative to 700px)
-        const paddleTopY = BASE_BOARD_HEIGHT - 20; // Posisi Y atas paddle (relative to 700px)
+        const paddleBottomY = BASE_BOARD_HEIGHT - 20 - paddleHeight;
+        const paddleTopY = BASE_BOARD_HEIGHT - 20;
         
+        // Tabrakan Paddle Bawah
         if (ballY + ballSize >= paddleBottomY && ballSpeedY > 0 && ballY < paddleTopY) {
             if (ballX + ballSize > playerX && ballX < playerX + paddleWidth) {
                 triggerPaddleVFX(bottomPaddle, 'paddle-bounce-focus');
                 
                 ballSpeedY *= -1; 
-                
                 const hitPoint = (ballX + ballSize/2) - (playerX + paddleWidth/2);
                 ballSpeedX += hitPoint * 10; 
-
                 ballSpeedX *= 1.075; 
                 ballSpeedY *= 1.075; 
-
                 ballY = paddleBottomY - ballSize; 
-                
                 return; 
             }
         }
 
-        // 3. Tabrakan Paddle Atas (STRES)
+        // Tabrakan Paddle Atas
         const topPaddleBottomY = 20 + paddleHeight;
         if (ballY <= topPaddleBottomY && ballSpeedY < 0) {
             if (ballX + ballSize > opponentX && ballX < opponentX + paddleWidth) {
                 triggerPaddleVFX(topPaddle, 'paddle-bounce-stress');
 
                 ballSpeedY *= -1; 
-                
                 const hitPoint = (ballX + ballSize/2) - (opponentX + paddleWidth/2);
                 ballSpeedX += hitPoint * 10;
-
                 ballSpeedX *= 1.075; 
                 ballSpeedY *= 1.075; 
-                
                 ballY = topPaddleBottomY; 
-                
                 return; 
             }
         }
         
-        // 4. Skor/Kalah (Melewati Batas Atas/Bawah)
-        if (ballY < 0) { // Gol PLAYER (FOKUS)
+        // Skor
+        if (ballY < 0) { 
             playerScore++;
             playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
             opponentSpeedMultiplier += SPEED_INCREMENT_PER_POINT;
@@ -809,7 +789,7 @@
             return;
         }
 
-        if (ballY > BASE_BOARD_HEIGHT - ballSize) { // Gol STRES
+        if (ballY > BASE_BOARD_HEIGHT - ballSize) { 
             opponentScore++;
             opponentScoreElement.textContent = `STRES (Musuh): ${opponentScore}`;
             if (opponentScore >= maxScore) {
@@ -820,10 +800,9 @@
             return;
         }
 
-        // Batasi kecepatan bola [Logika yang sama]
+        // Batasi kecepatan
         const currentSpeed = Math.sqrt(ballSpeedX**2 + ballSpeedY**2);
         const maxSpeed = 2.0 * initialBallSpeed; 
-        
         if (currentSpeed > maxSpeed) {
             const ratio = maxSpeed / currentSpeed;
             ballSpeedX *= ratio;
@@ -870,20 +849,25 @@
             deltaTime = 50; 
         }
 
-        // Update objek
         updatePlayer(deltaTime);
         updateOpponent(deltaTime);
         updateBall(deltaTime);
         
-        // Update VFX
         updatePaddleTrail();
         updateBallVFX(); 
         
         requestAnimationFrame(gameLoop);
     }
 
-    // --- MULAI GAME (Panggil versi modifikasi resetGame) ---
-    resetGame(); 
+    // --- MULAI GAME (Perbaikan Startup di V26.6) ---
+    
+    // Pastikan DOM sudah dimuat sepenuhnya sebelum menghitung dimensi dan memulai game
+    window.addEventListener('DOMContentLoaded', () => {
+        // Ambil dimensi awal sebelum game dimulai
+        recalculateDimensions(); 
+        // Mulai game loop dan countdown
+        resetGame(); 
+    });
 </script>
 
 </body>
