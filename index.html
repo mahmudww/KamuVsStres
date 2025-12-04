@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLAYER vs. STRES: The Mental Ping Pong (V26.8 Optimal)</title>
+    <title>PLAYER vs. STRES: The Mental Ping Pong (V26.9 Final Optimasi)</title>
     <style>
-        /* 🚨 V26.8 - Optimasi Transform Hardware */
+        /* 🚨 V26.9 - Final Optimasi Performa & Fix Partikel */
         
         /* WARNA PALET */
         :root {
@@ -114,7 +114,6 @@
         /* ---------------- PADDLE ATAS (STRES) ---------------- */
         #top-paddle {
             position: absolute;
-            /* Kita tetap butuh top/left statis sebagai offset container */
             top: 20px; 
             left: 0px; 
             width: 80px;
@@ -131,11 +130,12 @@
             color: var(--color-bg-dark);
             font-size: 0.7em;
             font-weight: bold;
+
+            will-change: transform; /* 🚩 V26.9: Optimasi GPU */
         }
         .paddle-bounce-stress {
             background-color: var(--color-ball) !important; 
-            /* Modifikasi Bounce VFX agar tetap menggunakan transform */
-            transform: translate3d(var(--paddle-x), 5px, 0) !important;
+            transform: translate3d(var(--opponent-x), 5px, 0) !important;
         }
         .paddle-trail-stress {
             box-shadow: 0 0 20px rgba(255, 107, 107, 1.0), 0 0 5px rgba(255, 107, 107, 1.0) !important; 
@@ -149,7 +149,6 @@
         /* ---------------- PADDLE BAWAH (PLAYER) ---------------- */
         #bottom-paddle {
             position: absolute;
-            /* Kita tetap butuh bottom/left statis sebagai offset container */
             bottom: 20px; 
             left: 0px; 
             width: 80px;
@@ -166,10 +165,11 @@
             color: var(--color-bg-dark);
             font-size: 0.7em;
             font-weight: bold;
+            
+            will-change: transform; /* 🚩 V26.9: Optimasi GPU */
         }
         .paddle-bounce-focus {
             background-color: var(--color-ball) !important; 
-             /* Modifikasi Bounce VFX agar tetap menggunakan transform */
             transform: translate3d(var(--paddle-x), -5px, 0) !important;
         }
         .paddle-trail-focus {
@@ -183,7 +183,6 @@
         /* ---------------- BOLA ---------------- */
         #ball {
             position: absolute;
-            /* Kita tetap butuh top/left statis sebagai offset container */
             top: 0;
             left: 0;
             width: 15px;
@@ -191,9 +190,10 @@
             background-color: var(--color-ball); 
             border-radius: 50%;
             z-index: 100; 
-            /* Di sini kita perlu memastikan transform tidak ditimpa oleh transform Bounce VFX */
             transition: transform 0.2s, opacity 0.2s, box-shadow 0.01s linear; 
             box-shadow: 0 0 0px var(--color-ball); 
+            
+            will-change: transform; /* 🚩 V26.9: Optimasi GPU */
         }
         .ball-explosion-vfx {
             transform: scale(3) translate3d(var(--ball-x), var(--ball-y), 0) !important;
@@ -217,9 +217,9 @@
             border-radius: 50%;
             background-color: var(--color-ball);
             opacity: 0;
-            /* Gunakan transform untuk pergerakan partikel agar efisien */
             transform: scale(0);
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out; 
+            /* 🚩 V26.9: Hapus transisi transform di sini, hanya pertahankan opacity dan transform di JS */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out; 
             box-shadow: 0 0 5px var(--color-ball);
         }
 
@@ -414,7 +414,6 @@
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT; 
         
-        // Atur ukuran (ini harus dilakukan hanya sekali atau saat resize)
         bottomPaddle.style.width = `${paddleWidth * scaleX}px`;
         bottomPaddle.style.height = `${paddleHeight * scaleY}px`;
         topPaddle.style.width = `${paddleWidth * scaleX}px`;
@@ -423,23 +422,20 @@
         ballElement.style.width = `${ballSize * scaleX}px`;
         ballElement.style.height = `${ballSize * scaleX}px`; 
 
-        // Atur offset statis (jika ada)
         const bottomOffset = 20 * scaleY;
         bottomPaddle.style.bottom = `${bottomOffset}px`;
         topPaddle.style.top = `${bottomOffset}px`; 
         
-        // 🚩 V26.8: Tidak lagi mengatur left/top di sini. Gunakan transform.
         updateDOMPositions();
     }
     
     window.addEventListener('resize', recalculateDimensions);
 
-    // --- FUNGSI BARU: UPDATE POSISI DOM MENGGUNAKAN TRANSFORM ---
+    // --- FUNGSI UPDATE POSISI DOM MENGGUNAKAN TRANSFORM (Akselerasi GPU) ---
     function updateDOMPositions() {
         const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
         const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT;
         
-        // Hitung perpindahan (translation) dalam piksel nyata
         const playerTranslateX = playerX * scaleX;
         const opponentTranslateX = opponentX * scaleX;
         const ballTranslateX = ballX * scaleX;
@@ -450,7 +446,7 @@
         topPaddle.style.transform = `translate3d(${opponentTranslateX}px, 0, 0)`;
         ballElement.style.transform = `translate3d(${ballTranslateX}px, ${ballTranslateY}px, 0)`;
 
-        // 🚩 V26.8: Perbarui custom properties untuk VFX (bounce)
+        // Perbarui custom properties untuk VFX (bounce)
         gameBoard.style.setProperty('--paddle-x', `${playerTranslateX}px`);
         gameBoard.style.setProperty('--opponent-x', `${opponentTranslateX}px`);
         gameBoard.style.setProperty('--ball-x', `${ballTranslateX}px`);
@@ -495,24 +491,27 @@
         p.style.height = `${size * scaleX}px`;
         p.style.boxShadow = `0 0 ${size * scaleX}px var(--color-ball)`;
 
-        // 🚩 V26.8: Gunakan transform untuk posisi partikel
         const translateX = ballX * scaleX + ballSize * scaleX / 2 - (size * scaleX / 2); 
         const translateY = ballY * scaleY + ballSize * scaleX / 2 - (size * scaleX / 2); 
         
-        p.style.left = `0`; // Reset static position
-        p.style.top = `0`; // Reset static position
-        p.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(1)`; 
+        p.style.left = `0`; 
+        p.style.top = `0`; 
         
-        // Reset transisi agar posisi langsung terupdate
+        // 🚩 V26.9: Hapus transisi untuk mengatur posisi instan
         p.style.transition = 'none';
-        p.style.opacity = '0.8';
         
-        // Memicu transisi menghilang pada frame berikutnya
-        setTimeout(() => {
-             p.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out';
-             p.style.opacity = '0';
-             p.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(0.1)`;
-        }, 50); 
+        // Atur posisi dan skala (partikel muncul)
+        p.style.opacity = '0.8';
+        p.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(1)`;
+
+        // Memicu transisi memudar pada frame berikutnya agar sinkron dengan bola
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                p.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                p.style.opacity = '0';
+                p.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(0.1)`; 
+            });
+        });
     }
 
     function startParticleTrail() {
@@ -613,7 +612,7 @@
         playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
         opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
         
-        recalculateDimensions(); // Memicu updateDOMPositions()
+        recalculateDimensions(); 
         ballElement.classList.remove('ball-explosion-vfx'); 
         ballElement.style.opacity = 1; 
 
@@ -657,7 +656,7 @@
             playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
             opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
             
-            recalculateDimensions(); // Memicu updateDOMPositions()
+            recalculateDimensions(); 
         }, 200); 
 
         countdownDisplay.textContent = '1';
@@ -717,7 +716,7 @@
         playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
         opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
         
-        recalculateDimensions(); // Memicu updateDOMPositions()
+        recalculateDimensions(); 
         
         startCountdown(1); 
     }
@@ -732,8 +731,6 @@
 
         if (playerX < 0) { playerX = 0; }
         if (playerX > BASE_BOARD_WIDTH - paddleWidth) { playerX = BASE_BOARD_WIDTH - paddleWidth; }
-        
-        // 🚩 V26.8: Hapus pembaruan DOM di sini
     }
 
     function updateOpponent(deltaTime) {
@@ -751,8 +748,6 @@
         
         if (opponentX < 0) { opponentX = 0; }
         if (opponentX > BASE_BOARD_WIDTH - paddleWidth) { opponentX = BASE_BOARD_WIDTH - paddleWidth; }
-
-        // 🚩 V26.8: Hapus pembaruan DOM di sini
     }
 
     function updateBall(deltaTime) {
@@ -761,9 +756,6 @@
 
         ballX += moveX;
         ballY += moveY;
-        
-        // [LOGIKA TABRAKAN DAN SKOR TETAP MENGGUNAKAN BASE DIMENSIONS]
-        // ... (Logika yang sama seperti V26.7)
         
         if (ballX < 0 || ballX > BASE_BOARD_WIDTH - ballSize) {
             ballSpeedX *= -1;
@@ -828,7 +820,6 @@
             return;
         }
 
-        // Batasi kecepatan
         const currentSpeed = Math.sqrt(ballSpeedX**2 + ballSpeedY**2);
         const maxSpeed = 2.0 * initialBallSpeed; 
         if (currentSpeed > maxSpeed) {
@@ -836,8 +827,6 @@
             ballSpeedX *= ratio;
             ballSpeedY *= ratio;
         }
-        
-        // 🚩 V26.8: Hapus pembaruan DOM di sini
     }
 
     // --- GAME CONTROL ---
@@ -879,7 +868,7 @@
         updateBall(deltaTime);
         
         // 2. Terapkan posisi ke DOM menggunakan Transform (Akselerasi GPU)
-        updateDOMPositions(); // <-- INI YANG MEMBUAT LEBIH RINGAN
+        updateDOMPositions(); 
         
         // 3. Update VFX
         updatePaddleTrail();
