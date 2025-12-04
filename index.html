@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLAYER vs. STRES: The Mental Ping Pong (V26.9 Final Optimasi)</title>
+    <title>PLAYER vs. STRES: The Mental Ping Pong (V26.10 Final Fix)</title>
     <style>
-        /* 🚨 V26.9 - Final Optimasi Performa & Fix Partikel */
+        /* 🚨 V26.10 - Fix Sinkronisasi Partikel */
         
         /* WARNA PALET */
         :root {
@@ -131,7 +131,7 @@
             font-size: 0.7em;
             font-weight: bold;
 
-            will-change: transform; /* 🚩 V26.9: Optimasi GPU */
+            will-change: transform; 
         }
         .paddle-bounce-stress {
             background-color: var(--color-ball) !important; 
@@ -166,7 +166,7 @@
             font-size: 0.7em;
             font-weight: bold;
             
-            will-change: transform; /* 🚩 V26.9: Optimasi GPU */
+            will-change: transform; 
         }
         .paddle-bounce-focus {
             background-color: var(--color-ball) !important; 
@@ -193,7 +193,7 @@
             transition: transform 0.2s, opacity 0.2s, box-shadow 0.01s linear; 
             box-shadow: 0 0 0px var(--color-ball); 
             
-            will-change: transform; /* 🚩 V26.9: Optimasi GPU */
+            will-change: transform; 
         }
         .ball-explosion-vfx {
             transform: scale(3) translate3d(var(--ball-x), var(--ball-y), 0) !important;
@@ -218,7 +218,7 @@
             background-color: var(--color-ball);
             opacity: 0;
             transform: scale(0);
-            /* 🚩 V26.9: Hapus transisi transform di sini, hanya pertahankan opacity dan transform di JS */
+            /* Transisi dipanggil di JS, ini hanya default/fallback */
             transition: opacity 0.5s ease-out, transform 0.5s ease-out; 
             box-shadow: 0 0 5px var(--color-ball);
         }
@@ -361,7 +361,7 @@
     const paddleWidth = 80;
     const paddleHeight = 15;
     const ballSize = 15;
-    const BASE_STARTING_BALL_Y = (BASE_BOARD_HEIGHT / 3) - (ballSize / 3); 
+    const BASE_STARTING_BALL_Y = (BASE_BOARD_HEIGHT / 2) - (ballSize / 2); 
 
     // Variabel Dimensi/Posisi Aktual yang Diperlukan untuk Skala
     let gameBoardRect;
@@ -402,7 +402,7 @@
     const FRAME_INTERVAL = 1000 / TARGET_FPS; 
     let then = 0;
     
-    let particleInterval; 
+    let frameCount = 0; // 🚩 V26.10: Frame counter untuk partikel
 
     // --- FUNGSI UTILITY: MENGHITUNG ULANG DIMENSI DAN POSISI ---
 
@@ -441,12 +441,10 @@
         const ballTranslateX = ballX * scaleX;
         const ballTranslateY = ballY * scaleY;
 
-        // Terapkan akselerasi hardware (translate3d)
         bottomPaddle.style.transform = `translate3d(${playerTranslateX}px, 0, 0)`;
         topPaddle.style.transform = `translate3d(${opponentTranslateX}px, 0, 0)`;
         ballElement.style.transform = `translate3d(${ballTranslateX}px, ${ballTranslateY}px, 0)`;
 
-        // Perbarui custom properties untuk VFX (bounce)
         gameBoard.style.setProperty('--paddle-x', `${playerTranslateX}px`);
         gameBoard.style.setProperty('--opponent-x', `${opponentTranslateX}px`);
         gameBoard.style.setProperty('--ball-x', `${ballTranslateX}px`);
@@ -497,7 +495,6 @@
         p.style.left = `0`; 
         p.style.top = `0`; 
         
-        // 🚩 V26.9: Hapus transisi untuk mengatur posisi instan
         p.style.transition = 'none';
         
         // Atur posisi dan skala (partikel muncul)
@@ -514,14 +511,9 @@
         });
     }
 
-    function startParticleTrail() {
-        if (particleInterval) clearInterval(particleInterval);
-        particleInterval = setInterval(usePooledParticle, 30); 
-    }
-
-    function stopParticleTrail() {
-        if (particleInterval) clearInterval(particleInterval);
-    }
+    // 🚩 V26.10: Hapus startParticleTrail dan stopParticleTrail yang menggunakan setInterval
+    function startParticleTrail() {}
+    function stopParticleTrail() {}
     
     function triggerPaddleVFX(paddleElement, vfxClass) {
         const afterglowClass = vfxClass.includes('focus') ? 
@@ -603,7 +595,8 @@
         let count = 3;
 
         resetInputState(); 
-        stopParticleTrail(); 
+        // 🚩 V26.10: Hapus stopParticleTrail() di sini
+        stopParticleTrail();
 
         ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
         ballY = BASE_STARTING_BALL_Y; 
@@ -626,8 +619,10 @@
                 setTimeout(() => {
                     countdownDisplay.style.display = 'none';
                     launchBall(directionTo, playerScore); 
-                    startParticleTrail(); 
+                    // 🚩 V26.10: Hapus startParticleTrail()
+                    
                     then = 0; 
+                    frameCount = 0; // RESET FRAME COUNTER
                     requestAnimationFrame(gameLoop);
                 }, 500); 
             }
@@ -640,6 +635,7 @@
         
         triggerScoreVFX(directionTo === 1); 
         triggerBallExplosion(); 
+        // 🚩 V26.10: Hapus stopParticleTrail()
         stopParticleTrail(); 
 
         resetInputState(); 
@@ -668,9 +664,10 @@
                 
                 const currentScore = directionTo === 1 ? playerScore : opponentScore;
                 launchBall(directionTo, currentScore); 
-                startParticleTrail(); 
+                // 🚩 V26.10: Hapus startParticleTrail()
                 
                 then = 0;
+                frameCount = 0; // RESET FRAME COUNTER
                 requestAnimationFrame(gameLoop);
             }, 500); 
         }, 1000); 
@@ -873,6 +870,12 @@
         // 3. Update VFX
         updatePaddleTrail();
         updateBallVFX(); 
+        
+        // 🚩 V26.10: Partikel Ditempatkan di Game Loop (Sinkronisasi Frame)
+        frameCount++;
+        if (frameCount % 2 === 0) { // Hanya buat partikel setiap 2 frame (misal 30 FPS trail)
+            usePooledParticle(); 
+        }
         
         requestAnimationFrame(gameLoop);
     }
