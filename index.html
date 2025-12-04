@@ -615,7 +615,7 @@
                 count--;
             } else {
                 clearInterval(countdownInterval);
-                countdownDisplay.textContent = 'PLAYER!'; 
+                countdownDisplay.textContent = 'FOKUS!'; 
                 setTimeout(() => {
                     countdownDisplay.style.display = 'none';
                     launchBall(directionTo, playerScore); 
@@ -655,7 +655,7 @@
         countdownDisplay.textContent = '1';
 
         setTimeout(() => {
-            countdownDisplay.textContent = 'PLAYER!'; 
+            countdownDisplay.textContent = 'FOKUS!'; 
             setTimeout(() => {
                 countdownDisplay.style.display = 'none';
                 
@@ -802,7 +802,7 @@
             playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
             opponentSpeedMultiplier += SPEED_INCREMENT_PER_POINT;
             if (playerScore >= maxScore) {
-                gameOver(`KAMU berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
+                gameOver(`FOKUS berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
             } else {
                 launchTransition(1); 
             }
@@ -845,7 +845,7 @@
         stopParticleTrail(); 
         
         const finalMessageText = message.includes("menang") ? 
-            "✨ KEMENANGAN PLAYER! ✨" : 
+            "✨ KEMENANGAN FOKUS! ✨" : 
             "🚨 DIKUASAI STRES! 🚨";
             
         messageText.textContent = finalMessageText;
