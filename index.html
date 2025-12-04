@@ -1,5 +1,482 @@
-// ... (Kode sebelumnya) ...
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLAYER vs. STRES: The Mental Ping Pong (V26.12 Final Partikel)</title>
+    <style>
+        /* 🚨 V26.12 - Final Fix Sinkronisasi Partikel */
+        
+        /* WARNA PALET */
+        :root {
+            --color-bg-dark: #161625;        
+            --color-bg-light: #202035;       
+            --color-focus: #4ecdc4;          
+            --color-stress: #ff6b6b;         
+            --color-ball: #ffee00;           
+            --color-text: #66fcf1;           
+        }
 
+        /* ---------------- ANIMASI UTAMA ---------------- */
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px var(--color-text); background-color: rgba(102, 252, 241, 0.5); }
+            50% { box-shadow: 0 0 20px var(--color-text); background-color: var(--color-text); }
+            100% { box-shadow: 0 0 5px var(--color-text); background-color: rgba(102, 252, 241, 0.5); }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            25% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+            50% { transform: translate(-3px, 0px) rotate(0.5deg); }
+            75% { transform: translate(3px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, 1px) rotate(-0.5deg); }
+        }
+
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--color-bg-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            overflow-x: hidden; 
+            color: var(--color-text);
+            padding: 10px 0; 
+        }
+        
+        #info-bar {
+            width: 90vw;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            background-color: var(--color-bg-light);
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 
+                -5px -5px 10px rgba(45, 45, 60, 0.4), 
+                5px 5px 10px rgba(0, 0, 0, 0.8);      
+        }
+
+        #game-board {
+            width: 90vw; 
+            height: 126vw; 
+            max-width: 500px;
+            max-height: 700px;
+            
+            border: 3px solid var(--color-text);
+            background-color: var(--color-bg-dark);
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.4s ease, border-color 0.4s ease; 
+            box-shadow: 
+                inset 5px 5px 15px rgba(0, 0, 0, 0.8),
+                inset -5px -5px 15px rgba(45, 45, 60, 0.4),
+                0 0 50px rgba(102, 252, 241, 0.2); 
+            border-radius: 10px;
+        }
+        
+        .board-shake {
+            animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+
+        .score-focus-vfx {
+            background-color: #0c3330 !important; 
+            border-color: var(--color-focus) !important;
+        }
+        .score-stress-vfx {
+            background-color: #3b1212 !important; 
+            border-color: var(--color-stress) !important;
+        }
+
+        /* ---------------- GARIS TENGAH BERDENYUT ---------------- */
+        #center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: rgba(102, 252, 241, 0.5); 
+            transform: translateY(-50%);
+            z-index: 5;
+            animation: pulse 2s infinite alternate; 
+        }
+        
+        /* ---------------- PADDLE ATAS (STRES) ---------------- */
+        #top-paddle {
+            position: absolute;
+            top: 20px; 
+            left: 0px; 
+            width: 80px;
+            height: 15px;
+            background-color: var(--color-stress); 
+            border-radius: 5px;
+            z-index: 10;
+            transition: background-color 0.05s, transform 0.05s, box-shadow 0.2s ease-out; 
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5); 
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--color-bg-dark);
+            font-size: 0.7em;
+            font-weight: bold;
+
+            will-change: transform; 
+        }
+        .paddle-bounce-stress {
+            background-color: var(--color-ball) !important; 
+            transform: translate3d(var(--opponent-x), 5px, 0) !important;
+        }
+        .paddle-trail-stress {
+            box-shadow: 0 0 20px rgba(255, 107, 107, 1.0), 0 0 5px rgba(255, 107, 107, 1.0) !important; 
+        }
+        .paddle-afterglow-stress {
+            box-shadow: 0 0 40px var(--color-ball), 0 0 10px var(--color-stress) !important;
+            transition: box-shadow 0.1s ease-in, transform 0.05s, background-color 0.05s !important;
+        }
+
+
+        /* ---------------- PADDLE BAWAH (PLAYER) ---------------- */
+        #bottom-paddle {
+            position: absolute;
+            bottom: 20px; 
+            left: 0px; 
+            width: 80px;
+            height: 15px;
+            background-color: var(--color-focus); 
+            border-radius: 5px;
+            z-index: 10;
+            transition: background-color 0.05s, transform 0.05s, box-shadow 0.2s ease-out; 
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--color-bg-dark);
+            font-size: 0.7em;
+            font-weight: bold;
+            
+            will-change: transform; 
+        }
+        .paddle-bounce-focus {
+            background-color: var(--color-ball) !important; 
+            transform: translate3d(var(--paddle-x), -5px, 0) !important;
+        }
+        .paddle-trail-focus {
+            box-shadow: 0 0 20px rgba(78, 205, 196, 1.0), 0 0 5px rgba(78, 205, 196, 1.0) !important; 
+        }
+        .paddle-afterglow-focus {
+            box-shadow: 0 0 40px var(--color-ball), 0 0 10px var(--color-focus) !important;
+            transition: box-shadow 0.1s ease-in, transform 0.05s, background-color 0.05s !important;
+        }
+        
+        /* ---------------- BOLA ---------------- */
+        #ball {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 15px;
+            height: 15px;
+            background-color: var(--color-ball); 
+            border-radius: 50%;
+            z-index: 100; 
+            transition: transform 0.2s, opacity 0.2s, box-shadow 0.01s linear; 
+            box-shadow: 0 0 0px var(--color-ball); 
+            
+            will-change: transform; 
+        }
+        .ball-explosion-vfx {
+            transform: scale(3) translate3d(var(--ball-x), var(--ball-y), 0) !important;
+            opacity: 0;
+        }
+
+        /* ---------------- PARTIKEL JALUR BOLA ---------------- */
+        #particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 90; 
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: var(--color-ball);
+            opacity: 0;
+            transform: scale(0);
+            /* V26.11: HANYA transisi opacity untuk memudar */
+            transition: opacity 0.5s ease-out; 
+            box-shadow: 0 0 5px var(--color-ball);
+        }
+
+        /* ---------------- DISPLAY & SCREEN (Tidak Berubah) ---------------- */
+        #countdown-display {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            color: var(--color-ball);
+            font-size: 5em; 
+            font-weight: bold;
+            text-shadow: 0 0 20px var(--color-ball);
+            z-index: 300;
+            display: none; 
+        }
+
+        #game-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); 
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            text-shadow: 0 0 20px rgba(78, 205, 196, 0.7);
+        }
+        #game-message button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 0.8em;
+            cursor: pointer;
+            background-color: var(--color-focus);
+            color: var(--color-bg-dark);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 
+                -5px -5px 10px rgba(45, 45, 60, 0.4), 
+                5px 5px 10px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(78, 205, 196, 0.5); 
+            transition: all 0.1s ease;
+        }
+        #game-message button:active {
+            box-shadow: 
+                inset 3px 3px 5px rgba(0, 0, 0, 0.8), 
+                inset -3px -3px 5px rgba(45, 45, 60, 0.4);
+            transform: scale(0.98);
+        }
+
+        /* KONTROL LAYAR SENTUH (Tidak Berubah) */
+        #touch-controls {
+            width: 90vw;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        .touch-button {
+            width: 48%; 
+            padding: 15px 0;
+            background-color: var(--color-bg-light);
+            color: var(--color-focus);
+            font-weight: bold;
+            text-align: center;
+            border-radius: 15px;
+            cursor: pointer;
+            user-select: none; 
+             box-shadow: 
+                -5px -5px 10px rgba(45, 45, 60, 0.4), 
+                5px 5px 10px rgba(0, 0, 0, 0.8),
+                0 0 5px rgba(78, 205, 196, 0.5);
+            transition: all 0.1s ease;
+        }
+        .touch-button:active {
+            box-shadow: 
+                inset 3px 3px 5px rgba(0, 0, 0, 0.8), 
+                inset -3px -3px 5px rgba(45, 45, 60, 0.4);
+            background-color: var(--color-focus);
+            color: var(--color-bg-dark);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="info-bar">
+    <div id="player-score">PLAYER (Anda): 0</div>
+    <div id="opponent-score">STRES (Musuh): 0</div>
+</div>
+
+<div id="game-board">
+    <div id="center-line"></div>
+    <div id="top-paddle">STRES</div>
+    <div id="ball"></div>
+    <div id="bottom-paddle">PLAYER</div>
+    
+    <div id="particle-container"></div>
+    <div id="countdown-display"></div>
+
+    <div id="game-message">
+        <div id="message-text"></div>
+        <div id="final-score"></div>
+        <button onclick="resetGame()">COBA LAGI</button>
+    </div>
+</div>
+
+<div id="touch-controls">
+    <div class="touch-button" id="left-button">KIRI (&#9664;)</div>
+    <div class="touch-button" id="right-button">KANAN (&#9654;)</div>
+</div>
+
+
+<script>
+    // --- VARIABEL DOM & STATE GAME ---
+    const gameBoard = document.getElementById('game-board');
+    const bottomPaddle = document.getElementById('bottom-paddle');
+    const topPaddle = document.getElementById('top-paddle');
+    const ballElement = document.getElementById('ball');
+    const particleContainer = document.getElementById('particle-container'); 
+    const playerScoreElement = document.getElementById('player-score');
+    const opponentScoreElement = document.getElementById('opponent-score');
+    const gameMessage = document.getElementById('game-message');
+    const messageText = document.getElementById('message-text');
+    const countdownDisplay = document.getElementById('countdown-display');
+    const leftButton = document.getElementById('left-button');
+    const rightButton = document.getElementById('right-button');
+    
+    // Ukuran Papan Dasar
+    const BASE_BOARD_WIDTH = 500;
+    const BASE_BOARD_HEIGHT = 700;
+    const paddleWidth = 80;
+    const paddleHeight = 15;
+    const ballSize = 15;
+    const BASE_STARTING_BALL_Y = (BASE_BOARD_HEIGHT / 2) - (ballSize / 2); 
+
+    // Variabel Dimensi/Posisi Aktual yang Diperlukan untuk Skala
+    let gameBoardRect;
+    let gameBoardWidth;
+    let gameBoardHeight;
+
+    // PARTICLE POOLING
+    const MAX_PARTICLES = 30; 
+    let particlePool = [];
+    let particleIndex = 0;
+
+    // State Paddle (Nilai relatif terhadap BASE_BOARD_WIDTH)
+    let playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+    let opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+    const FIXED_PADDLE_SPEED = 800; 
+    let keys = {}; 
+    
+    // State Bola (Nilai relatif terhadap BASE_BOARD_DIMENSIONS)
+    let ballX, ballY; 
+    let ballSpeedX, ballSpeedY; 
+    const initialBallSpeed = 500; 
+    
+    // State Score
+    let playerScore = 0;
+    let opponentScore = 0;
+    const maxScore = 5; 
+    
+    // Multiplier Kecepatan Musuh
+    let opponentSpeedMultiplier = 1.0; 
+    const SPEED_INCREMENT_PER_POINT = 0.15; 
+    
+    // State Game
+    let isGameRunning = false; 
+    let isPaused = true;
+    
+    // FPS Throttling Variables
+    const TARGET_FPS = 60;
+    const FRAME_INTERVAL = 1000 / TARGET_FPS; 
+    let then = 0;
+    
+    let frameCount = 0; 
+
+    // --- FUNGSI UTILITY: MENGHITUNG ULANG DIMENSI DAN POSISI ---
+
+    function recalculateDimensions() {
+        gameBoardRect = gameBoard.getBoundingClientRect();
+        gameBoardWidth = gameBoardRect.width;
+        gameBoardHeight = gameBoardRect.height;
+        
+        const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
+        const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT; 
+        
+        bottomPaddle.style.width = `${paddleWidth * scaleX}px`;
+        bottomPaddle.style.height = `${paddleHeight * scaleY}px`;
+        topPaddle.style.width = `${paddleWidth * scaleX}px`;
+        topPaddle.style.height = `${paddleHeight * scaleY}px`;
+        
+        // Memastikan bola tetap bulat meskipun skala X dan Y berbeda
+        ballElement.style.width = `${ballSize * scaleX}px`;
+        ballElement.style.height = `${ballSize * scaleX}px`; 
+
+        const bottomOffset = 20 * scaleY;
+        bottomPaddle.style.bottom = `${bottomOffset}px`;
+        topPaddle.style.top = `${bottomOffset}px`; 
+        
+        updateDOMPositions();
+    }
+    
+    window.addEventListener('resize', recalculateDimensions);
+
+    // --- FUNGSI UPDATE POSISI DOM MENGGUNAKAN TRANSFORM (Akselerasi GPU) ---
+    function updateDOMPositions() {
+        const scaleX = gameBoardWidth / BASE_BOARD_WIDTH;
+        const scaleY = gameBoardHeight / BASE_BOARD_HEIGHT;
+        
+        const playerTranslateX = playerX * scaleX;
+        const opponentTranslateX = opponentX * scaleX;
+        const ballTranslateX = ballX * scaleX;
+        const ballTranslateY = ballY * scaleY;
+
+        bottomPaddle.style.transform = `translate3d(${playerTranslateX}px, 0, 0)`;
+        topPaddle.style.transform = `translate3d(${opponentTranslateX}px, 0, 0)`;
+        ballElement.style.transform = `translate3d(${ballTranslateX}px, ${ballTranslateY}px, 0)`;
+
+        // Set variabel CSS untuk VFX
+        gameBoard.style.setProperty('--paddle-x', `${playerTranslateX}px`);
+        gameBoard.style.setProperty('--opponent-x', `${opponentTranslateX}px`);
+        gameBoard.style.setProperty('--ball-x', `${ballTranslateX}px`);
+        gameBoard.style.setProperty('--ball-y', `${ballTranslateY}px`);
+    }
+
+    // --- FUNGSI VFX & UTILITY LAINNYA ---
+    
+    function resetInputState() {
+        keys['ArrowLeft'] = false;
+        keys['ArrowRight'] = false;
+        bottomPaddle.classList.remove('paddle-trail-focus');
+        topPaddle.classList.remove('paddle-trail-stress');
+    }
+
+    function initializeParticlePool() {
+        particleContainer.innerHTML = '';
+        particlePool = [];
+        particleIndex = 0;
+        
+        for (let i = 0; i < MAX_PARTICLES; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.opacity = '0';
+            p.style.transform = 'scale(0.1)';
+            particleContainer.appendChild(p);
+            particlePool.push(p);
+        }
+    }
+    
     function usePooledParticle() {
         if (!isGameRunning || isPaused) return;
         
@@ -14,16 +491,16 @@
         p.style.height = `${size * scaleX}px`;
         p.style.boxShadow = `0 0 ${size * scaleX}px var(--color-ball)`;
 
-        // 🚩 V26.12: Koreksi Posisi Mundur 
-        // Hitung vektor kecil untuk mundur (partikel harus tertinggal sedikit)
-        const correctionFactor = 0.015; // Jeda 15 milidetik (sekitar 1 frame/4)
+        // 🚩 V26.12: Koreksi Posisi Mundur
+        // Partikel ditempatkan sedikit di belakang bola
+        const correctionFactor = 0.015; // Jeda 15 milidetik (kurang dari 1 frame)
         const moveXCorrection = ballSpeedX * correctionFactor;
         const moveYCorrection = ballSpeedY * correctionFactor;
         
         const correctedBallX = ballX - moveXCorrection;
         const correctedBallY = ballY - moveYCorrection;
 
-        // Hitung posisi Translate yang dikoreksi (berdasarkan BASE_BOARD_DIMENSIONS)
+        // Hitung posisi Translate yang dikoreksi
         const translateX = correctedBallX * scaleX + ballSize * scaleX / 2 - (size * scaleX / 2); 
         const translateY = correctedBallY * scaleY + ballSize * scaleX / 2 - (size * scaleX / 2); 
         
@@ -40,7 +517,6 @@
         // 3. Memicu transisi memudar (HANYA OPACITY)
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                // HANYA gunakan transisi opacity. Transform instan.
                 p.style.transition = 'opacity 0.5s ease-out'; 
                 p.style.opacity = '0';
                 // Partikel mengecil instan
@@ -49,4 +525,389 @@
         });
     }
 
-// ... (Sisa kode game loop dan lainnya) ...
+    // Fungsi ini dikosongkan (V26.10)
+    function startParticleTrail() {}
+    function stopParticleTrail() {}
+    
+    function triggerPaddleVFX(paddleElement, vfxClass) {
+        const afterglowClass = vfxClass.includes('focus') ? 
+                               'paddle-afterglow-focus' : 
+                               'paddle-afterglow-stress';
+        paddleElement.classList.add(vfxClass);
+        paddleElement.classList.add(afterglowClass); 
+        setTimeout(() => { paddleElement.classList.remove(vfxClass); }, 100); 
+        setTimeout(() => { paddleElement.classList.remove(afterglowClass); }, 200); 
+    }
+
+    function triggerScoreVFX(isPlayerScore) {
+        const vfxClass = isPlayerScore ? 'score-focus-vfx' : 'score-stress-vfx';
+        gameBoard.classList.add(vfxClass);
+        gameBoard.classList.add('board-shake'); 
+        setTimeout(() => {
+            gameBoard.classList.remove(vfxClass);
+            gameBoard.classList.remove('board-shake'); 
+        }, 400); 
+    }
+
+    function triggerBallExplosion() {
+        ballElement.classList.add('ball-explosion-vfx');
+    }
+    
+    function updateBallVFX() {
+        // Logika VFX bola (dapat ditambahkan glow/blur di sini)
+    }
+
+    function updatePaddleTrail() {
+        // Logika VFX paddle (dapat ditambahkan trail/glow di sini)
+    }
+
+
+    // --- INPUT PEMAIN (Player Input) ---
+    
+    function setMovement(key, value) {
+        if (!isGameRunning || isPaused) return; 
+        keys[key] = value;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') { setMovement('ArrowLeft', true); } 
+        else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') { setMovement('ArrowRight', true); }
+        if (e.key.includes('Arrow')) { e.preventDefault(); }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') { setMovement('ArrowLeft', false); } 
+        else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') { setMovement('ArrowRight', false); }
+    });
+
+    function startMoveLeft() { setMovement('ArrowLeft', true); }
+    function startMoveRight() { setMovement('ArrowRight', true); }
+    function stopMove() { 
+        keys['ArrowLeft'] = false; 
+        keys['ArrowRight'] = false; 
+    }
+
+    leftButton.addEventListener('mousedown', startMoveLeft);
+    leftButton.addEventListener('touchstart', (e) => { e.preventDefault(); startMoveLeft(); });
+    rightButton.addEventListener('mousedown', startMoveRight);
+    rightButton.addEventListener('touchstart', (e) => { e.preventDefault(); startMoveRight(); });
+
+    leftButton.addEventListener('mouseup', stopMove);
+    leftButton.addEventListener('touchend', stopMove);
+    rightButton.addEventListener('mouseup', stopMove);
+    rightButton.addEventListener('touchend', stopMove);
+    leftButton.addEventListener('mouseleave', stopMove);
+    rightButton.addEventListener('mouseleave', stopMove);
+
+
+    // --- FUNGSI COUNTDOWN & TRANSISI ---
+
+    function startCountdown(directionTo) {
+        isGameRunning = false;
+        isPaused = true;
+        countdownDisplay.style.display = 'block';
+        let count = 3;
+
+        resetInputState(); 
+        stopParticleTrail();
+
+        // Reset posisi bola dan paddle
+        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+        ballY = BASE_STARTING_BALL_Y; 
+        ballSpeedX = 0;
+        ballSpeedY = 0;
+        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+        
+        recalculateDimensions(); 
+        ballElement.classList.remove('ball-explosion-vfx'); 
+        ballElement.style.opacity = 1; 
+
+        const countdownInterval = setInterval(() => {
+            if (count > 0) {
+                countdownDisplay.textContent = count;
+                count--;
+            } else {
+                clearInterval(countdownInterval);
+                countdownDisplay.textContent = 'FOKUS!'; 
+                setTimeout(() => {
+                    countdownDisplay.style.display = 'none';
+                    launchBall(directionTo, playerScore); 
+                    
+                    then = 0; 
+                    frameCount = 0; // RESET FRAME COUNTER
+                    requestAnimationFrame(gameLoop);
+                }, 500); 
+            }
+        }, 1000); 
+    }
+    
+    function launchTransition(directionTo) {
+        isGameRunning = false;
+        isPaused = true;
+        
+        triggerScoreVFX(directionTo === 1); 
+        triggerBallExplosion(); 
+        stopParticleTrail(); 
+
+        resetInputState(); 
+
+        countdownDisplay.style.display = 'block';
+        
+        setTimeout(() => {
+            ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+            ballY = BASE_STARTING_BALL_Y; 
+            
+            ballElement.classList.remove('ball-explosion-vfx');
+            ballElement.style.opacity = 1; 
+            
+            playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+            opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+            
+            recalculateDimensions(); 
+        }, 200); 
+
+        countdownDisplay.textContent = '1';
+
+        setTimeout(() => {
+            countdownDisplay.textContent = 'FOKUS!'; 
+            setTimeout(() => {
+                countdownDisplay.style.display = 'none';
+                
+                const currentScore = directionTo === 1 ? playerScore : opponentScore;
+                launchBall(directionTo, currentScore); 
+                
+                then = 0;
+                frameCount = 0; // RESET FRAME COUNTER
+                requestAnimationFrame(gameLoop);
+            }, 500); 
+        }, 1000); 
+    }
+
+    function launchBall(directionTo, scoringPlayerScore) {
+        // Atur kecepatan awal dan arah
+        ballSpeedY = initialBallSpeed * directionTo; 
+        let horizontalDirection = (scoringPlayerScore % 2 === 0) ? 1 : -1;
+        ballSpeedX = horizontalDirection * initialBallSpeed * (Math.random() * 0.5 + 0.5); 
+        
+        // Normalisasi dan batas kecepatan (agar tidak terlalu lambat/cepat saat awal)
+        const currentSpeed = Math.sqrt(ballSpeedX**2 + ballSpeedY**2);
+        if (currentSpeed > initialBallSpeed * 1.05) {
+             const ratio = initialBallSpeed / currentSpeed;
+             ballSpeedX *= ratio;
+             ballSpeedY *= ratio;
+        }
+        
+        isPaused = false;
+        isGameRunning = true;
+        then = 0; 
+    }
+
+    // --- FUNGSI RESET GAME ---
+
+    function resetGame() {
+        isGameRunning = false;
+        isPaused = true;
+        playerScore = 0;
+        opponentScore = 0;
+        playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
+        opponentScoreElement.textContent = `STRES (Musuh): ${opponentScore}`;
+        
+        opponentSpeedMultiplier = 1.0; 
+        
+        gameMessage.style.display = 'none';
+        
+        resetInputState(); 
+        
+        stopParticleTrail(); 
+
+        ballX = (BASE_BOARD_WIDTH / 2) - (ballSize / 2);
+        ballY = BASE_STARTING_BALL_Y; 
+        playerX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2);
+        opponentX = (BASE_BOARD_WIDTH / 2) - (paddleWidth / 2); 
+        
+        recalculateDimensions(); 
+        
+        startCountdown(1); 
+    }
+    
+    // --- UPDATE GAME OBJECTS ---
+
+    function updatePlayer(deltaTime) {
+        const actualSpeed = FIXED_PADDLE_SPEED * deltaTime / 1000; 
+        
+        if (keys['ArrowLeft']) { playerX -= actualSpeed; }
+        if (keys['ArrowRight']) { playerX += actualSpeed; }
+
+        if (playerX < 0) { playerX = 0; }
+        if (playerX > BASE_BOARD_WIDTH - paddleWidth) { playerX = BASE_BOARD_WIDTH - paddleWidth; }
+    }
+
+    function updateOpponent(deltaTime) {
+        const opponentCenter = opponentX + paddleWidth / 2;
+        const ballCenter = ballX + ballSize / 2;
+        
+        const baseAISpeed = initialBallSpeed * 0.98;
+        const aiSpeed = baseAISpeed * opponentSpeedMultiplier * deltaTime / 1000; 
+        const margin = 2; 
+
+        if (ballSpeedY < 0) { 
+            if (ballCenter < opponentCenter - margin) { opponentX -= aiSpeed; } 
+            else if (ballCenter > opponentCenter + margin) { opponentX += aiSpeed; }
+        }
+        
+        if (opponentX < 0) { opponentX = 0; }
+        if (opponentX > BASE_BOARD_WIDTH - paddleWidth) { opponentX = BASE_BOARD_WIDTH - paddleWidth; }
+    }
+
+    function updateBall(deltaTime) {
+        const moveX = ballSpeedX * deltaTime / 1000;
+        const moveY = ballSpeedY * deltaTime / 1000;
+
+        ballX += moveX;
+        ballY += moveY;
+        
+        // Tabrakan Dinding Kiri/Kanan
+        if (ballX < 0 || ballX > BASE_BOARD_WIDTH - ballSize) {
+            ballSpeedX *= -1;
+            ballX = ballX < 0 ? 0 : BASE_BOARD_WIDTH - ballSize; 
+        }
+
+        const paddleBottomY = BASE_BOARD_HEIGHT - 20 - paddleHeight;
+        const paddleTopY = BASE_BOARD_HEIGHT - 20;
+        
+        // Tabrakan Paddle Bawah (PLAYER)
+        if (ballY + ballSize >= paddleBottomY && ballSpeedY > 0 && ballY < paddleTopY) {
+            if (ballX + ballSize > playerX && ballX < playerX + paddleWidth) {
+                triggerPaddleVFX(bottomPaddle, 'paddle-bounce-focus');
+                
+                ballSpeedY *= -1; 
+                // Efek pantulan: sudut berdasarkan titik benturan
+                const hitPoint = (ballX + ballSize/2) - (playerX + paddleWidth/2);
+                ballSpeedX += hitPoint * 10; 
+                // Percepatan
+                ballSpeedX *= 1.075; 
+                ballSpeedY *= 1.075; 
+                ballY = paddleBottomY - ballSize; // Koreksi posisi untuk menghindari pantulan ganda
+                return; 
+            }
+        }
+
+        // Tabrakan Paddle Atas (STRES)
+        const topPaddleBottomY = 20 + paddleHeight;
+        if (ballY <= topPaddleBottomY && ballSpeedY < 0) {
+            if (ballX + ballSize > opponentX && ballX < opponentX + paddleWidth) {
+                triggerPaddleVFX(topPaddle, 'paddle-bounce-stress');
+
+                ballSpeedY *= -1; 
+                // Efek pantulan: sudut berdasarkan titik benturan
+                const hitPoint = (ballX + ballSize/2) - (opponentX + paddleWidth/2);
+                ballSpeedX += hitPoint * 10;
+                // Percepatan
+                ballSpeedX *= 1.075; 
+                ballSpeedY *= 1.075; 
+                ballY = topPaddleBottomY; // Koreksi posisi untuk menghindari pantulan ganda
+                return; 
+            }
+        }
+        
+        // Skor (Ball keluar dari batas)
+        if (ballY < 0) { 
+            playerScore++;
+            playerScoreElement.textContent = `PLAYER (Anda): ${playerScore}`;
+            opponentSpeedMultiplier += SPEED_INCREMENT_PER_POINT;
+            if (playerScore >= maxScore) {
+                gameOver(`FOKUS berhasil mengalahkan STRES! Anda menang ${playerScore} - ${opponentScore}.`);
+            } else {
+                launchTransition(1); // Luncurkan ke arah PLAYER
+            }
+            return;
+        }
+
+        if (ballY > BASE_BOARD_HEIGHT - ballSize) { 
+            opponentScore++;
+            opponentScoreElement.textContent = `STRES (Musuh): ${opponentScore}`;
+            if (opponentScore >= maxScore) {
+                gameOver(`STRES telah menguasai! Anda kalah ${playerScore} - ${opponentScore}.`);
+            } else {
+                launchTransition(-1); // Luncurkan ke arah STRES
+            }
+            return;
+        }
+
+        // Batasi kecepatan maksimum
+        const currentSpeed = Math.sqrt(ballSpeedX**2 + ballSpeedY**2);
+        const maxSpeed = 2.0 * initialBallSpeed; 
+        if (currentSpeed > maxSpeed) {
+            const ratio = maxSpeed / currentSpeed;
+            ballSpeedX *= ratio;
+            ballSpeedY *= ratio;
+        }
+    }
+
+    // --- GAME CONTROL ---
+
+    function gameOver(message) {
+        isGameRunning = false;
+        stopParticleTrail(); 
+        
+        const finalMessageText = message.includes("menang") ? 
+            "✨ KEMENANGAN FOKUS! ✨" : 
+            "🚨 DIKUASAI STRES! 🚨";
+            
+        messageText.textContent = finalMessageText;
+        gameMessage.style.display = 'flex'; 
+    }
+
+    // --- GAME LOOP INTI ---
+
+    function gameLoop(timestamp) {
+        if (!isGameRunning || isPaused) {
+            requestAnimationFrame(gameLoop); 
+            return; 
+        }
+        
+        // FPS Throttling
+        if (then === 0) then = timestamp;
+        const elapsed = timestamp - then;
+
+        if (elapsed < FRAME_INTERVAL) {
+            requestAnimationFrame(gameLoop);
+            return;
+        }
+
+        then = timestamp - (elapsed % FRAME_INTERVAL); 
+        let deltaTime = FRAME_INTERVAL;
+
+        // 1. Update posisi internal (hanya angka)
+        updatePlayer(deltaTime);
+        updateOpponent(deltaTime);
+        updateBall(deltaTime);
+        
+        // 2. Terapkan posisi ke DOM menggunakan Transform (Akselerasi GPU)
+        updateDOMPositions(); 
+        
+        // 3. Update VFX
+        updatePaddleTrail();
+        updateBallVFX(); 
+        
+        // Partikel Ditempatkan di Game Loop (Sinkronisasi Frame)
+        frameCount++;
+        if (frameCount % 2 === 0) { // Menghasilkan 30 partikel per detik pada 60 FPS
+            usePooledParticle(); 
+        }
+        
+        requestAnimationFrame(gameLoop);
+    }
+
+    // --- MULAI GAME ---
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        recalculateDimensions(); 
+        initializeParticlePool(); 
+        resetGame(); 
+    });
+</script>
+
+</body>
+</html>
