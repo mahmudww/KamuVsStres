@@ -3,31 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PLAYER vs. STRES: The Mental Ping Pong (VFX BOOST)</title>
+    <title>PLAYER vs. STRES: The Mental Ping Pong</title>
     <style>
-        /* WARNA PALET */
         :root {
-            --color-bg-dark: #161625;        
-            --color-bg-light: #202035;       
-            --color-focus: #4ecdc4;          
-            --color-stress: #ff6b6b;         
-            --color-ball: #ffee00;           
-            --color-text: #66fcf1;           
+            --color-bg-dark: #0f0f1a;        
+            --color-bg-light: #1a1a2e;       
+            --color-focus: #00f5d4;          
+            --color-stress: #f72585;         
+            --color-ball: #4cc9f0;           
+            --color-text: #4cc9f0;           
         }
 
-        /* ANIMASI UTAMA */
         @keyframes pulse {
-            0% { box-shadow: 0 0 5px var(--color-text); background-color: rgba(102, 252, 241, 0.5); }
-            50% { box-shadow: 0 0 20px var(--color-text); background-color: var(--color-text); }
-            100% { box-shadow: 0 0 5px var(--color-text); background-color: rgba(102, 252, 241, 0.5); }
+            0% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.3; }
         }
 
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
-            25% { transform: translate(-1px, -2px) rotate(-0.5deg); }
-            50% { transform: translate(-3px, 0px) rotate(0.5deg); }
-            75% { transform: translate(3px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, 1px) rotate(-0.5deg); }
+            25% { transform: translate(-2px, -1px) rotate(-0.5deg); }
+            50% { transform: translate(-1px, 2px) rotate(0.5deg); }
+            75% { transform: translate(2px, 1px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-0.5deg); }
         }
 
         body {
@@ -37,7 +35,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: var(--color-bg-dark);
+            background: linear-gradient(135deg, #09090e 0%, #16162b 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             overflow: hidden;
             color: var(--color-text);
@@ -49,14 +47,17 @@
             max-width: 500px;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 10px 15px;
+            margin-bottom: 12px;
+            padding: 12px 20px;
             box-sizing: border-box;
-            background-color: var(--color-bg-light);
-            border-radius: 12px;
-            font-size: 1em;
-            font-weight: bold;
-            box-shadow: -5px -5px 10px rgba(45, 45, 60, 0.4), 5px 5px 10px rgba(0, 0, 0, 0.8);      
+            background: rgba(26, 26, 46, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            border-radius: 14px;
+            font-size: 0.95em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         #game-board {
@@ -64,166 +65,96 @@
             max-width: 500px;
             height: 60vh;
             max-height: 600px;
-            border: 3px solid var(--color-text);
-            background-color: var(--color-bg-dark);
+            border: 2px solid rgba(76, 201, 240, 0.4);
+            background: radial-gradient(circle at center, #131324 0%, #0b0b14 100%);
             position: relative;
             overflow: hidden;
-            transition: background-color 0.4s ease, border-color 0.4s ease; 
-            box-shadow: 
-                inset 5px 5px 15px rgba(0, 0, 0, 0.8),
-                inset -5px -5px 15px rgba(45, 45, 60, 0.4),
-                0 0 30px rgba(102, 252, 241, 0.2); 
-            border-radius: 10px;
+            border-radius: 16px;
             box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0,0,0,0.5);
+            will-change: transform;
         }
         
         .board-shake {
             animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
-            transform: translate3d(0, 0, 0);
-            backface-visibility: hidden;
-            perspective: 1000px;
         }
 
         .score-focus-vfx {
-            background-color: #0c3330 !important; 
             border-color: var(--color-focus) !important;
+            box-shadow: 0 0 25px rgba(0, 245, 212, 0.3), inset 0 0 20px rgba(0,0,0,0.5) !important;
         }
         .score-stress-vfx {
-            background-color: #3b1212 !important; 
             border-color: var(--color-stress) !important;
+            box-shadow: 0 0 25px rgba(247, 37, 133, 0.3), inset 0 0 20px rgba(0,0,0,0.5) !important;
         }
 
-        /* GARIS TENGAH BERDENYUT */
         #center-line {
             position: absolute;
             top: 50%;
             left: 0;
             width: 100%;
             height: 2px;
-            background-color: rgba(102, 252, 241, 0.5); 
+            background: repeating-linear-gradient(90deg, rgba(76, 201, 240, 0.4) 0px, rgba(76, 201, 240, 0.4) 10px, transparent 10px, transparent 20px);
             transform: translateY(-50%);
             z-index: 5;
-            animation: pulse 2s infinite alternate; 
+            animation: pulse 3s infinite ease-in-out; 
         }
         
-        /* PADDLE ATAS (STRES) */
-        #top-paddle {
+        #top-paddle, #bottom-paddle {
             position: absolute;
-            top: 15px; 
-            width: 80px;
-            height: 15px;
-            background-color: var(--color-stress); 
-            left: calc(50% - 40px); 
-            border-radius: 5px;
+            width: 84px;
+            height: 16px;
+            border-radius: 8px;
             z-index: 10;
-            transition: background-color 0.05s, transform 0.05s, box-shadow 0.2s ease-out; 
-            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5); 
-            
             display: flex;
             justify-content: center;
             align-items: center;
-            color: var(--color-bg-dark);
-            font-size: 0.7em;
-            font-weight: bold;
-        }
-        .paddle-bounce-stress {
-            background-color: var(--color-ball) !important; 
-            transform: translateY(5px);
-        }
-        .paddle-trail-stress {
-            box-shadow: 0 0 20px rgba(255, 107, 107, 1.0), 0 0 5px rgba(255, 107, 107, 1.0) !important; 
-        }
-        .paddle-afterglow-stress {
-            box-shadow: 0 0 40px var(--color-ball), 0 0 10px var(--color-stress) !important;
-            transition: box-shadow 0.1s ease-in, transform 0.05s, background-color 0.05s !important;
+            color: #0b0b14;
+            font-size: 0.65em;
+            font-weight: 800;
+            letter-spacing: 1px;
+            will-change: left;
+            transition: background-color 0.15s ease;
         }
 
-        /* PADDLE BAWAH (PLAYER) */
+        #top-paddle {
+            top: 15px; 
+            background-color: var(--color-stress); 
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.4);
+        }
+
         #bottom-paddle {
-            position: absolute;
             bottom: 15px; 
-            width: 80px;
-            height: 15px;
             background-color: var(--color-focus); 
-            left: calc(50% - 40px); 
-            border-radius: 5px;
-            z-index: 10;
-            transition: background-color 0.05s, transform 0.05s, box-shadow 0.2s ease-out; 
-            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
-            
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--color-bg-dark);
-            font-size: 0.7em;
-            font-weight: bold;
-        }
-        .paddle-bounce-focus {
-            background-color: var(--color-ball) !important; 
-            transform: translateY(-5px);
-        }
-        .paddle-trail-focus {
-            box-shadow: 0 0 20px rgba(78, 205, 196, 1.0), 0 0 5px rgba(78, 205, 196, 1.0) !important; 
-        }
-        .paddle-afterglow-focus {
-            box-shadow: 0 0 40px var(--color-ball), 0 0 10px var(--color-focus) !important;
-            transition: box-shadow 0.1s ease-in, transform 0.05s, background-color 0.05s !important;
+            box-shadow: 0 4px 15px rgba(0, 245, 212, 0.4);
         }
         
-        /* BOLA */
         #ball {
             position: absolute;
-            width: 15px;
-            height: 15px;
-            background-color: var(--color-ball); 
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--color-ball) 70%);
             border-radius: 50%;
             z-index: 100; 
-            transition: transform 0.2s, opacity 0.2s, box-shadow 0.01s linear; 
-            box-shadow: 0 0 0px var(--color-ball); 
+            box-shadow: 0 0 12px var(--color-ball);
+            will-change: transform;
         }
+        
         .ball-explosion-vfx {
-            transform: scale(3);
+            transform: scale(2.5);
             opacity: 0;
+            transition: transform 0.25s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.25s ease;
         }
 
-        /* PARTIKEL JALUR BOLA */
-        #particle-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; 
-            z-index: 90; 
-            overflow: hidden;
-        }
-
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background-color: var(--color-ball);
-            opacity: 0;
-            transform: scale(0);
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
-            box-shadow: 0 0 5px var(--color-ball);
-        }
-        .particle-show {
-            opacity: 0.8;
-            transform: scale(1);
-        }
-
-        /* DISPLAY & SCREEN */
         #countdown-display {
             position: absolute;
             top: 50%; 
             left: 50%;
             transform: translate(-50%, -50%); 
-            color: var(--color-ball);
-            font-size: 4em; 
-            font-weight: bold;
-            text-shadow: 0 0 20px var(--color-ball);
+            color: #ffffff;
+            font-size: 3.5em; 
+            font-weight: 900;
+            text-shadow: 0 0 20px var(--color-focus);
             z-index: 300;
             display: none; 
         }
@@ -234,43 +165,41 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9); 
+            background: rgba(11, 11, 20, 0.85);
+            backdrop-filter: blur(8px);
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 1.5em;
+            font-size: 1.3em;
             text-align: center;
             z-index: 200;
             display: none;
-            text-shadow: 0 0 20px rgba(78, 205, 196, 0.7);
             padding: 20px;
             box-sizing: border-box;
         }
+
         #game-message button {
-            padding: 12px 24px;
-            margin-top: 20px;
-            font-size: 0.7em;
+            padding: 14px 28px;
+            margin-top: 25px;
+            font-size: 0.65em;
             cursor: pointer;
-            background-color: var(--color-focus);
-            color: var(--color-bg-dark);
+            background: linear-gradient(135deg, var(--color-focus) 0%, #039688 100%);
+            color: #0b0b14;
             border: none;
-            border-radius: 15px;
-            box-shadow: 
-                -5px -5px 10px rgba(45, 45, 60, 0.4), 
-                5px 5px 10px rgba(0, 0, 0, 0.8),
-                0 0 15px rgba(78, 205, 196, 0.5); 
-            transition: all 0.1s ease;
-        }
-        #game-message button:active {
-            box-shadow: 
-                inset 3px 3px 5px rgba(0, 0, 0, 0.8), 
-                inset -3px -3px 5px rgba(45, 45, 60, 0.4);
-            transform: scale(0.98);
+            border-radius: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+            transition: transform 0.1s ease, filter 0.1s ease;
         }
 
-        /* KONTROL LAYAR SENTUH */
+        #game-message button:active {
+            transform: scale(0.95);
+            filter: brightness(0.9);
+        }
+
         #touch-controls {
             width: 100%;
             max-width: 500px;
@@ -278,30 +207,29 @@
             justify-content: space-between;
             margin-top: 15px;
             box-sizing: border-box;
-            padding: 0 5px;
+            padding: 0 4px;
         }
+
         .touch-button {
             width: 48%; 
-            padding: 18px 0;
-            background-color: var(--color-bg-light);
+            padding: 16px 0;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(76, 201, 240, 0.15);
             color: var(--color-focus);
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 0.9em;
+            letter-spacing: 1px;
             text-align: center;
-            border-radius: 15px;
+            border-radius: 14px;
             cursor: pointer;
             user-select: none; 
-            box-shadow: 
-                -5px -5px 10px rgba(45, 45, 60, 0.4), 
-                5px 5px 10px rgba(0, 0, 0, 0.8),
-                0 0 5px rgba(78, 205, 196, 0.5);
-            transition: all 0.1s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transition: background 0.15s ease, color 0.15s ease;
         }
+
         .touch-button:active {
-            box-shadow: 
-                inset 3px 3px 5px rgba(0, 0, 0, 0.8), 
-                inset -3px -3px 5px rgba(45, 45, 60, 0.4);
-            background-color: var(--color-focus);
-            color: var(--color-bg-dark);
+            background: var(--color-focus);
+            color: #0b0b14;
         }
     </style>
 </head>
@@ -318,7 +246,6 @@
     <div id="ball"></div>
     <div id="bottom-paddle">PLAYER</div>
     
-    <div id="particle-container"></div>
     <div id="countdown-display"></div>
 
     <div id="game-message">
@@ -329,8 +256,8 @@
 </div>
 
 <div id="touch-controls">
-    <div class="touch-button" id="left-button">KIRI (&#9664;)</div>
-    <div class="touch-button" id="right-button">KANAN (&#9654;)</div>
+    <div class="touch-button" id="left-button">&#9664; KIRI</div>
+    <div class="touch-button" id="right-button">KANAN &#9654;</div>
 </div>
 
 <script>
@@ -338,7 +265,6 @@
     const bottomPaddle = document.getElementById('bottom-paddle');
     const topPaddle = document.getElementById('top-paddle');
     const ballElement = document.getElementById('ball');
-    const particleContainer = document.getElementById('particle-container'); 
     const playerScoreElement = document.getElementById('player-score');
     const opponentScoreElement = document.getElementById('opponent-score');
     const gameMessage = document.getElementById('game-message');
@@ -347,7 +273,6 @@
     const leftButton = document.getElementById('left-button');
     const rightButton = document.getElementById('right-button');
     
-    // Ukuran Papan Dinamis Berdasarkan Lebar Layar Asli
     let boardWidth = gameBoard.clientWidth;
     let boardHeight = gameBoard.clientHeight;
 
@@ -356,9 +281,9 @@
         boardHeight = gameBoard.clientHeight;
     });
 
-    const paddleWidth = 80;
-    const paddleHeight = 15;
-    const ballSize = 15;
+    const paddleWidth = 84;
+    const paddleHeight = 16;
+    const ballSize = 16;
     const STARTING_BALL_Y = (boardHeight / 3) - (ballSize / 3); 
 
     let playerX = (boardWidth / 2) - (paddleWidth / 2); 
@@ -380,125 +305,29 @@
     let isGameRunning = false; 
     let isPaused = true;
     let lastTimestamp = 0; 
-    
-    let particleInterval; 
 
     function resetInputState() {
         keys['ArrowLeft'] = false;
         keys['ArrowRight'] = false;
-        bottomPaddle.classList.remove('paddle-trail-focus');
-        topPaddle.classList.remove('paddle-trail-stress');
     }
 
-    function createBallParticle() {
-        if (!isGameRunning || isPaused) return;
-
-        const p = document.createElement('div');
-        p.className = 'particle';
-        
-        const x = ballX + ballSize / 2 - 2; 
-        const y = ballY + ballSize / 2 - 2;
-
-        p.style.left = `${x}px`;
-        p.style.top = `${y}px`;
-        
-        const size = Math.random() * 3 + 2; 
-        p.style.width = `${size}px`;
-        p.style.height = `${size}px`;
-        p.style.boxShadow = `0 0 ${size}px var(--color-ball)`;
-
-        particleContainer.appendChild(p);
-
+    function triggerPaddleVFX(paddleElement, isFocus) {
+        paddleElement.style.backgroundColor = '#ffffff';
         setTimeout(() => {
-            p.classList.add('particle-show');
-        }, 10);
-
-        setTimeout(() => {
-            p.style.opacity = '0';
-            p.style.transform = 'scale(0.1)';
-            
-            setTimeout(() => {
-                p.remove();
-            }, 500);
-        }, 150); 
-    }
-
-    function startParticleTrail() {
-        if (particleInterval) clearInterval(particleInterval);
-        particleInterval = setInterval(createBallParticle, 30); 
-    }
-
-    function stopParticleTrail() {
-        if (particleInterval) clearInterval(particleInterval);
-    }
-    
-    function triggerPaddleVFX(paddleElement, vfxClass) {
-        const afterglowClass = vfxClass.includes('focus') ? 
-                               'paddle-afterglow-focus' : 
-                               'paddle-afterglow-stress';
-                               
-        paddleElement.classList.add(vfxClass);
-        paddleElement.classList.add(afterglowClass); 
-
-        setTimeout(() => {
-            paddleElement.classList.remove(vfxClass); 
-        }, 100); 
-        
-        setTimeout(() => {
-            paddleElement.classList.remove(afterglowClass);
-        }, 200); 
+            paddleElement.style.backgroundColor = isFocus ? 'var(--color-focus)' : 'var(--color-stress)';
+        }, 120);
     }
     
     function triggerScoreVFX(isPlayerScore) {
         const vfxClass = isPlayerScore ? 'score-focus-vfx' : 'score-stress-vfx';
-        
-        gameBoard.classList.add(vfxClass);
-        gameBoard.classList.add('board-shake'); 
-        
+        gameBoard.classList.add(vfxClass, 'board-shake'); 
         setTimeout(() => {
-            gameBoard.classList.remove(vfxClass);
-            gameBoard.classList.remove('board-shake'); 
+            gameBoard.classList.remove(vfxClass, 'board-shake'); 
         }, 400); 
     }
 
     function triggerBallExplosion() {
         ballElement.classList.add('ball-explosion-vfx');
-    }
-
-    function updateBallVFX() {
-        if (!isGameRunning || isPaused) {
-            ballElement.style.boxShadow = `0 0 0px var(--color-ball)`;
-            return;
-        }
-
-        const currentSpeedSq = ballSpeedX**2 + ballSpeedY**2;
-        const maxSpeedSq = (2.0 * initialBallSpeed)**2; 
-        const speedRatio = Math.min(1, currentSpeedSq / maxSpeedSq); 
-
-        const blurRadius = speedRatio * 10;
-        let offsetX = -(ballSpeedX * 0.005) * speedRatio;
-        let offsetY = -(ballSpeedY * 0.005) * speedRatio;
-
-        ballElement.style.boxShadow = `${offsetX}px ${offsetY}px ${blurRadius}px var(--color-ball)`;
-    }
-
-    function updatePaddleTrail() {
-        const playerIsMoving = keys['ArrowLeft'] || keys['ArrowRight'];
-        
-        if (playerIsMoving) {
-            bottomPaddle.classList.add('paddle-trail-focus');
-        } else {
-            bottomPaddle.classList.remove('paddle-trail-focus');
-        }
-        
-        const isAITurn = ballSpeedY < 0;
-        const isAIPursuing = Math.abs(ballX + ballSize/2 - (opponentX + paddleWidth/2)) > 5;
-
-        if (isAITurn && isAIPursuing) {
-            topPaddle.classList.add('paddle-trail-stress');
-        } else {
-            topPaddle.classList.remove('paddle-trail-stress');
-        }
     }
 
     function setMovement(key, value) {
@@ -507,30 +336,19 @@
     }
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-            setMovement('ArrowLeft', true);
-        } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-            setMovement('ArrowRight', true);
-        }
-        if (e.key.includes('Arrow')) {
-            e.preventDefault(); 
-        }
+        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') setMovement('ArrowLeft', true);
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') setMovement('ArrowRight', true);
+        if (e.key.includes('Arrow')) e.preventDefault(); 
     });
 
     document.addEventListener('keyup', (e) => {
-        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-            setMovement('ArrowLeft', false);
-        } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-            setMovement('ArrowRight', false);
-        }
+        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') setMovement('ArrowLeft', false);
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') setMovement('ArrowRight', false);
     });
 
     function startMoveLeft() { setMovement('ArrowLeft', true); }
     function startMoveRight() { setMovement('ArrowRight', true); }
-    function stopMove() { 
-        keys['ArrowLeft'] = false; 
-        keys['ArrowRight'] = false; 
-    }
+    function stopMove() { keys['ArrowLeft'] = false; keys['ArrowRight'] = false; }
 
     leftButton.addEventListener('mousedown', startMoveLeft);
     leftButton.addEventListener('touchstart', (e) => { e.preventDefault(); startMoveLeft(); });
@@ -551,16 +369,13 @@
         let count = 3;
 
         resetInputState(); 
-        stopParticleTrail(); 
 
         ballX = (boardWidth / 2) - (ballSize / 2);
         ballY = STARTING_BALL_Y; 
         ballSpeedX = 0;
         ballSpeedY = 0;
         
-        ballElement.style.transition = 'none'; 
-        ballElement.style.transform = 'scale(1)'; 
-        
+        ballElement.style.transform = 'translate3d(0,0,0) scale(1)'; 
         ballElement.classList.remove('ball-explosion-vfx'); 
         ballElement.style.opacity = 1; 
         ballElement.style.left = `${ballX}px`;
@@ -580,11 +395,7 @@
                 countdownDisplay.textContent = 'FOKUS!'; 
                 setTimeout(() => {
                     countdownDisplay.style.display = 'none';
-                    
-                    ballElement.style.transition = 'transform 0.2s, opacity 0.2s, box-shadow 0.01s linear';
-                    
                     launchBall(directionTo, playerScore); 
-                    startParticleTrail(); 
                     lastTimestamp = 0; 
                     requestAnimationFrame(gameLoop);
                 }, 500); 
@@ -594,12 +405,9 @@
     
     function launchTransition(directionTo) {
         isGameRunning = false;
-        isPaused = true;
-        
+        isPaused = true; 
         triggerScoreVFX(directionTo === 1); 
         triggerBallExplosion(); 
-        stopParticleTrail(); 
-
         resetInputState(); 
 
         countdownDisplay.style.display = 'block';
@@ -607,10 +415,7 @@
         setTimeout(() => {
             ballX = (boardWidth / 2) - (ballSize / 2);
             ballY = STARTING_BALL_Y; 
-            
-            ballElement.style.transition = 'none'; 
-            ballElement.style.transform = 'scale(1)'; 
-            
+            ballElement.style.transform = 'translate3d(0,0,0) scale(1)';
             ballElement.classList.remove('ball-explosion-vfx');
             ballElement.style.opacity = 1; 
             ballElement.style.left = `${ballX}px`;
@@ -628,13 +433,8 @@
             countdownDisplay.textContent = 'FOKUS!'; 
             setTimeout(() => {
                 countdownDisplay.style.display = 'none';
-                
-                ballElement.style.transition = 'transform 0.2s, opacity 0.2s, box-shadow 0.01s linear';
-                
                 const currentScore = directionTo === 1 ? playerScore : opponentScore;
                 launchBall(directionTo, currentScore); 
-                startParticleTrail(); 
-                
                 lastTimestamp = 0;
                 requestAnimationFrame(gameLoop);
             }, 500); 
@@ -643,22 +443,8 @@
 
     function launchBall(directionTo, scoringPlayerScore) {
         ballSpeedY = initialBallSpeed * directionTo; 
-        
-        let horizontalDirection;
-        if (scoringPlayerScore % 2 === 0) {
-            horizontalDirection = 1; 
-        } else {
-            horizontalDirection = -1;
-        }
-        
+        let horizontalDirection = (scoringPlayerScore % 2 === 0) ? 1 : -1; 
         ballSpeedX = horizontalDirection * initialBallSpeed * (Math.random() * 0.5 + 0.5); 
-        
-        const currentSpeed = Math.sqrt(ballSpeedX**2 + ballSpeedY**2);
-        if (currentSpeed > initialBallSpeed * 1.05) {
-             const ratio = initialBallSpeed / currentSpeed;
-             ballSpeedX *= ratio;
-             ballSpeedY *= ratio;
-        }
         
         isPaused = false;
         isGameRunning = true;
@@ -675,9 +461,7 @@
         opponentScore = 0;
         playerScoreElement.textContent = `PLAYER: ${playerScore}`;
         opponentScoreElement.textContent = `STRES: ${opponentScore}`;
-        
         opponentSpeedMultiplier = 1.0; 
-        
         gameMessage.style.display = 'none';
         
         playerX = (boardWidth / 2) - (paddleWidth / 2); 
@@ -686,29 +470,17 @@
         topPaddle.style.left = `${opponentX}px`;
         
         resetInputState(); 
-        
-        particleContainer.innerHTML = '';
-        stopParticleTrail(); 
-
         startCountdown(1); 
     }
     
     function updatePlayer(deltaTime) {
         let actualSpeed = FIXED_PADDLE_SPEED * deltaTime / 1000; 
         
-        if (keys['ArrowLeft']) {
-            playerX -= actualSpeed;
-        }
-        if (keys['ArrowRight']) {
-            playerX += actualSpeed;
-        }
+        if (keys['ArrowLeft']) playerX -= actualSpeed;
+        if (keys['ArrowRight']) playerX += actualSpeed;
 
-        if (playerX < 0) {
-            playerX = 0;
-        }
-        if (playerX > boardWidth - paddleWidth) {
-            playerX = boardWidth - paddleWidth;
-        }
+        if (playerX < 0) playerX = 0;
+        if (playerX > boardWidth - paddleWidth) playerX = boardWidth - paddleWidth;
 
         bottomPaddle.style.left = `${playerX}px`;
     }
@@ -716,25 +488,17 @@
     function updateOpponent(deltaTime) {
         const opponentCenter = opponentX + paddleWidth / 2;
         const ballCenter = ballX + ballSize / 2;
-        
         const baseAISpeed = initialBallSpeed * 0.98;
         const aiSpeed = baseAISpeed * opponentSpeedMultiplier * deltaTime / 1000; 
         const margin = 2; 
 
         if (ballSpeedY < 0) { 
-            if (ballCenter < opponentCenter - margin) {
-                opponentX -= aiSpeed;
-            } else if (ballCenter > opponentCenter + margin) {
-                opponentX += aiSpeed;
-            }
+            if (ballCenter < opponentCenter - margin) opponentX -= aiSpeed;
+            else if (ballCenter > opponentCenter + margin) opponentX += aiSpeed;
         }
         
-        if (opponentX < 0) {
-            opponentX = 0;
-        }
-        if (opponentX > boardWidth - paddleWidth) {
-            opponentX = boardWidth - paddleWidth;
-        }
+        if (opponentX < 0) opponentX = 0;
+        if (opponentX > boardWidth - paddleWidth) opponentX = boardWidth - paddleWidth;
 
         topPaddle.style.left = `${opponentX}px`;
     }
@@ -754,18 +518,13 @@
         const maxBounceY = bottomPaddle.offsetTop + paddleHeight;
         if (ballY + ballSize >= bottomPaddle.offsetTop && ballSpeedY > 0 && ballY < maxBounceY) {
             if (ballX + ballSize > playerX && ballX < playerX + paddleWidth) {
-                triggerPaddleVFX(bottomPaddle, 'paddle-bounce-focus');
-                
+                triggerPaddleVFX(bottomPaddle, true);
                 ballSpeedY *= -1; 
-                
                 const hitPoint = (ballX + ballSize/2) - (playerX + paddleWidth/2);
                 ballSpeedX += hitPoint * 10; 
-
                 ballSpeedX *= 1.075; 
                 ballSpeedY *= 1.075; 
-
                 ballY = bottomPaddle.offsetTop - ballSize; 
-                
                 return; 
             }
         }
@@ -773,18 +532,13 @@
         const topPaddleBottomY = topPaddle.offsetTop + paddleHeight;
         if (ballY <= topPaddleBottomY && ballSpeedY < 0) {
             if (ballX + ballSize > opponentX && ballX < opponentX + paddleWidth) {
-                triggerPaddleVFX(topPaddle, 'paddle-bounce-stress');
-
+                triggerPaddleVFX(topPaddle, false);
                 ballSpeedY *= -1; 
-                
                 const hitPoint = (ballX + ballSize/2) - (opponentX + paddleWidth/2);
                 ballSpeedX += hitPoint * 10;
-
                 ballSpeedX *= 1.075; 
                 ballSpeedY *= 1.075; 
-                
                 ballY = topPaddleBottomY; 
-                
                 return; 
             }
         }
@@ -792,7 +546,6 @@
         if (ballY < 0) { 
             playerScore++;
             playerScoreElement.textContent = `PLAYER: ${playerScore}`;
-            
             opponentSpeedMultiplier += SPEED_INCREMENT_PER_POINT;
 
             if (playerScore >= maxScore) {
@@ -814,53 +567,28 @@
             return;
         }
 
-        const currentSpeed = Math.sqrt(ballSpeedX**2 + ballSpeedY**2);
-        const maxSpeed = 2.0 * initialBallSpeed; 
-        
-        if (currentSpeed > maxSpeed) {
-            const ratio = maxSpeed / currentSpeed;
-            ballSpeedX *= ratio;
-            ballSpeedY *= ratio;
-        }
-
-        ballElement.style.left = `${ballX}px`;
-        ballElement.style.top = `${ballY}px`;
+        ballElement.style.transform = `translate3d(${ballX}px, ${ballY}px, 0)`;
     }
 
     function gameOver(message) {
         isGameRunning = false;
-        stopParticleTrail(); 
-        
-        const finalMessageText = message.includes("menang") ? 
-            "✨ KEMENANGAN FOKUS! ✨" : 
-            "🚨 DIKUASAI STRES! 🚨";
-            
+        const finalMessageText = message.includes("menang") ? "✨ KEMENANGAN FOKUS! ✨" : "🚨 DIKUASAI STRES! 🚨";
         messageText.textContent = finalMessageText;
         gameMessage.style.display = 'flex'; 
     }
 
     function gameLoop(timestamp) {
-        if (!isGameRunning || isPaused) {
-            requestAnimationFrame(gameLoop); 
-            return; 
-        }
+        if (!isGameRunning || isPaused) return; 
         
-        if (lastTimestamp === 0) {
-            lastTimestamp = timestamp;
-        }
+        if (lastTimestamp === 0) lastTimestamp = timestamp;
         let deltaTime = timestamp - lastTimestamp;
         lastTimestamp = timestamp; 
 
-        if (deltaTime > 50) {
-            deltaTime = 50; 
-        }
+        if (deltaTime > 50) deltaTime = 50; 
 
         updatePlayer(deltaTime);
         updateOpponent(deltaTime);
         updateBall(deltaTime);
-        
-        updatePaddleTrail();
-        updateBallVFX(); 
         
         requestAnimationFrame(gameLoop);
     }
