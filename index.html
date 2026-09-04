@@ -1,738 +1,917 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-
-    <!--
-        V27
-        Responsive + Mobile Controls + Lightweight SFX
-        + Particle Pool + Subtle Scanline
-    -->
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
-
-    <title>PLAYER vs. STRES: The Mental Ping Pong</title>
-
-    <style>
-        /* =========================================================
-           ROOT / WARNA
-        ========================================================= */
-
-        :root {
-            --color-bg-dark: #161625;
-            --color-bg-light: #202035;
-            --color-focus: #4ecdc4;
-            --color-stress: #ff6b6b;
-            --color-ball: #ffee00;
-            --color-text: #66fcf1;
-
-            --game-width: 500px;
-            --game-height: 700px;
-        }
-
-        /* =========================================================
-           RESET
-        ========================================================= */
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-
-            min-height: 100dvh;
-
-            padding:
-                max(8px, env(safe-area-inset-top))
-                max(8px, env(safe-area-inset-right))
-                max(8px, env(safe-area-inset-bottom))
-                max(8px, env(safe-area-inset-left));
-
-            background-color: var(--color-bg-dark);
-
-            font-family:
-                'Segoe UI',
-                Tahoma,
-                Geneva,
-                Verdana,
-                sans-serif;
-
-            overflow: hidden;
-
-            color: var(--color-text);
-
-            touch-action: manipulation;
-        }
+<meta charset="UTF-8">
 
-        /* =========================================================
-           ANIMASI
-        ========================================================= */
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
 
-        @keyframes pulse {
-            0% {
-                opacity: 0.35;
-            }
+<title>PLAYER vs. STRES: The Mental Ping Pong</title>
 
-            50% {
-                opacity: 0.75;
-            }
+<style>
 
-            100% {
-                opacity: 0.35;
-            }
-        }
-
-        @keyframes shake {
-            0% {
-                transform: translate3d(1px, 1px, 0);
-            }
+/* =========================================================
+   WARNA
+========================================================= */
 
-            25% {
-                transform: translate3d(-2px, -2px, 0);
-            }
+:root {
+    --color-bg-dark: #161625;
+    --color-bg-light: #202035;
+    --color-focus: #4ecdc4;
+    --color-stress: #ff6b6b;
+    --color-ball: #ffee00;
+    --color-text: #66fcf1;
+}
 
-            50% {
-                transform: translate3d(-3px, 0, 0);
-            }
 
-            75% {
-                transform: translate3d(3px, 2px, 0);
-            }
+/* =========================================================
+   ANIMASI
+========================================================= */
 
-            100% {
-                transform: translate3d(1px, 1px, 0);
-            }
-        }
+@keyframes pulse {
 
-        /* =========================================================
-           SCORE BAR
-        ========================================================= */
+    0% {
+        opacity: 0.45;
+        box-shadow: 0 0 4px var(--color-text);
+    }
 
-        #info-bar {
-            width: min(var(--game-width), 92vw);
+    50% {
+        opacity: 1;
+        box-shadow: 0 0 12px var(--color-text);
+    }
 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+    100% {
+        opacity: 0.45;
+        box-shadow: 0 0 4px var(--color-text);
+    }
+}
 
-            gap: 10px;
 
-            margin-bottom: 10px;
-            padding: 8px 14px;
+@keyframes shake {
 
-            background-color: var(--color-bg-light);
+    0% {
+        transform: translate3d(1px, 1px, 0);
+    }
 
-            border-radius: 12px;
+    25% {
+        transform: translate3d(-2px, -2px, 0);
+    }
 
-            font-size: clamp(0.72rem, 3vw, 1.15rem);
-            font-weight: bold;
+    50% {
+        transform: translate3d(-3px, 0, 0);
+    }
 
-            box-shadow:
-                -4px -4px 8px rgba(45, 45, 60, 0.35),
-                4px 4px 8px rgba(0, 0, 0, 0.7);
+    75% {
+        transform: translate3d(3px, 2px, 0);
+    }
 
-            flex-shrink: 0;
-        }
+    100% {
+        transform: translate3d(1px, 1px, 0);
+    }
+}
 
-        #player-score {
-            color: var(--color-focus);
-        }
 
-        #opponent-score {
-            color: var(--color-stress);
-            text-align: right;
-        }
+/* =========================================================
+   GLOBAL
+========================================================= */
 
-        /* =========================================================
-           GAME BOARD
-        ========================================================= */
+* {
+    box-sizing: border-box;
 
-        #game-board {
-            /*
-                GAME INTERNAL LOGIC:
-                500 x 700
+    -webkit-tap-highlight-color: transparent;
+}
 
-                DISPLAY:
-                mengikuti ukuran layar.
-            */
 
-            width: min(var(--game-width), 92vw);
-            aspect-ratio: 5 / 7;
+html,
+body {
 
-            position: relative;
+    width: 100%;
+    height: 100%;
 
-            overflow: hidden;
+    margin: 0;
+}
 
-            background-color: var(--color-bg-dark);
 
-            border: 3px solid var(--color-text);
-            border-radius: 10px;
+body {
 
-            box-shadow:
-                inset 5px 5px 15px rgba(0, 0, 0, 0.8),
-                inset -5px -5px 15px rgba(45, 45, 60, 0.35),
-                0 0 35px rgba(102, 252, 241, 0.18);
+    display: flex;
 
-            transition:
-                background-color 0.25s ease,
-                border-color 0.25s ease;
+    flex-direction: column;
 
-            /*
-                Penting untuk HP:
-                browser tidak mencoba scroll / zoom game.
-            */
-            touch-action: none;
+    justify-content: center;
 
-            flex-shrink: 1;
+    align-items: center;
 
-            /*
-                Membuat elemen absolute tetap relatif terhadap
-                koordinat game internal.
-            */
-        }
+    min-height: 100dvh;
 
-        /*
-            Karena physics menggunakan 500x700,
-            kita memakai CSS custom scaling.
-        */
+    background-color:
+        var(--color-bg-dark);
 
-        #game-board > * {
-            /*
-                Posisi game memakai sistem koordinat 500x700.
-                Browser akan menskalakan seluruh board secara visual.
-            */
-        }
+    color:
+        var(--color-text);
 
-        /* =========================================================
-           SUBTLE SCANLINE
-        ========================================================= */
+    font-family:
+        'Segoe UI',
+        Tahoma,
+        Geneva,
+        Verdana,
+        sans-serif;
 
-        #game-board::after {
-            content: "";
+    overflow: hidden;
 
-            position: absolute;
-            inset: 0;
+    touch-action: none;
 
-            pointer-events: none;
+    overscroll-behavior: none;
+}
 
-            z-index: 150;
 
-            background:
-                repeating-linear-gradient(
-                    to bottom,
-                    rgba(102, 252, 241, 0.025) 0px,
-                    rgba(102, 252, 241, 0.025) 1px,
-                    transparent 1px,
-                    transparent 4px
-                );
+/* =========================================================
+   WRAPPER
+========================================================= */
 
-            opacity: 0.45;
-        }
+#game-wrapper {
 
-        /*
-            Saat user mengaktifkan mode reduced motion,
-            scanline tetap ada tetapi tidak mengganggu.
-        */
+    width: min(94vw, 506px);
 
-        /* =========================================================
-           SCORE VFX
-        ========================================================= */
+    display: flex;
 
-        .score-focus-vfx {
-            background-color: #0c3330 !important;
-            border-color: var(--color-focus) !important;
-        }
+    flex-direction: column;
 
-        .score-stress-vfx {
-            background-color: #3b1212 !important;
-            border-color: var(--color-stress) !important;
-        }
+    align-items: center;
 
-        .board-shake {
-            animation:
-                shake 0.18s cubic-bezier(.36, .07, .19, .97)
-                both;
-        }
+    flex-shrink: 1;
+}
 
-        /* =========================================================
-           GARIS TENGAH
-        ========================================================= */
 
-        #center-line {
-            position: absolute;
+/* =========================================================
+   SCORE BAR
+========================================================= */
 
-            top: 50%;
-            left: 0;
+#info-bar {
 
-            width: 100%;
-            height: 2px;
+    width: 100%;
 
-            transform: translateY(-50%);
+    display: flex;
 
-            background-color:
-                rgba(102, 252, 241, 0.42);
+    justify-content: space-between;
 
-            z-index: 5;
+    align-items: center;
 
-            animation:
-                pulse 2.2s ease-in-out infinite;
-        }
+    margin-bottom: 9px;
 
-        /* =========================================================
-           PADDLE ATAS
-        ========================================================= */
+    padding: 9px 14px;
 
-        #top-paddle {
-            position: absolute;
+    background-color:
+        var(--color-bg-light);
 
-            top: 20px;
-            left: 210px;
+    border-radius: 12px;
 
-            width: 80px;
-            height: 15px;
+    font-size:
+        clamp(
+            0.7rem,
+            2.8vw,
+            1rem
+        );
 
-            background-color: var(--color-stress);
+    font-weight: bold;
 
-            border-radius: 5px;
+    box-shadow:
 
-            z-index: 10;
+        -3px -3px 7px
+        rgba(45, 45, 60, 0.35),
 
-            will-change: transform;
+        3px 3px 7px
+        rgba(0, 0, 0, 0.7);
 
-            color: var(--color-bg-dark);
+    white-space: nowrap;
+}
 
-            font-size: 0.7em;
-            font-weight: bold;
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+/* =========================================================
+   GAME BOARD
+========================================================= */
 
-            box-shadow:
-                0 0 8px rgba(255, 107, 107, 0.45);
+#game-board {
 
-            transition:
-                background-color 0.05s,
-                box-shadow 0.15s ease-out;
-        }
+    width: min(94vw, 500px);
 
-        .paddle-bounce-stress {
-            background-color: var(--color-ball) !important;
-            transform:
-                translate3d(0, 5px, 0);
-        }
+    aspect-ratio: 5 / 7;
 
-        .paddle-trail-stress {
-            box-shadow:
-                0 0 15px rgba(255, 107, 107, 0.85),
-                0 0 5px rgba(255, 107, 107, 0.7) !important;
-        }
+    position: relative;
 
-        .paddle-afterglow-stress {
-            box-shadow:
-                0 0 28px var(--color-ball),
-                0 0 8px var(--color-stress) !important;
-        }
+    overflow: hidden;
 
-        /* =========================================================
-           PADDLE BAWAH
-        ========================================================= */
+    border:
+        3px solid var(--color-text);
 
-        #bottom-paddle {
-            position: absolute;
+    background-color:
+        var(--color-bg-dark);
 
-            bottom: 20px;
-            left: 210px;
+    border-radius: 10px;
 
-            width: 80px;
-            height: 15px;
+    box-shadow:
 
-            background-color: var(--color-focus);
+        inset 3px 3px 12px
+        rgba(0, 0, 0, 0.75),
 
-            border-radius: 5px;
+        inset -3px -3px 12px
+        rgba(45, 45, 60, 0.3),
 
-            z-index: 10;
+        0 0 25px
+        rgba(102, 252, 241, 0.18);
 
-            will-change: transform;
+    transform:
+        translateZ(0);
 
-            color: var(--color-bg-dark);
+    contain:
+        layout paint;
+}
 
-            font-size: 0.7em;
-            font-weight: bold;
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+/* =========================================================
+   GAME WORLD
+=========================================================
 
-            box-shadow:
-                0 0 8px rgba(78, 205, 196, 0.45);
+   Physics selalu menggunakan
+   ukuran 500 x 700.
 
-            transition:
-                background-color 0.05s,
-                box-shadow 0.15s ease-out;
-        }
+   Di HP world akan di-scale.
+========================================================= */
 
-        .paddle-bounce-focus {
-            background-color: var(--color-ball) !important;
+#game-world {
 
-            transform:
-                translate3d(0, -5px, 0);
-        }
+    position: absolute;
 
-        .paddle-trail-focus {
-            box-shadow:
-                0 0 15px rgba(78, 205, 196, 0.85),
-                0 0 5px rgba(78, 205, 196, 0.7) !important;
-        }
+    left: 0;
+    top: 0;
 
-        .paddle-afterglow-focus {
-            box-shadow:
-                0 0 28px var(--color-ball),
-                0 0 8px var(--color-focus) !important;
-        }
+    width: 500px;
+    height: 700px;
 
-        /* =========================================================
-           BOLA
-        ========================================================= */
+    transform-origin:
+        top left;
 
-        #ball {
-            position: absolute;
+    will-change:
+        transform;
 
-            left: 0;
-            top: 0;
+    contain:
+        layout paint;
+}
 
-            width: 15px;
-            height: 15px;
 
-            background-color: var(--color-ball);
+/* =========================================================
+   BOARD VFX
+========================================================= */
 
-            border-radius: 50%;
+.score-focus-vfx {
 
-            z-index: 100;
+    background-color:
+        #0c3330 !important;
 
-            will-change: transform;
+    border-color:
+        var(--color-focus) !important;
+}
 
-            box-shadow:
-                0 0 7px var(--color-ball);
 
-            /*
-                Posisi digerakkan menggunakan transform.
-                Ini lebih ramah GPU dibanding left/top setiap frame.
-            */
+.score-stress-vfx {
 
-            transition:
-                opacity 0.15s ease;
-        }
+    background-color:
+        #3b1212 !important;
 
-        .ball-explosion-vfx {
-            transform:
-                translate3d(var(--ball-x), var(--ball-y), 0)
-                scale(3);
+    border-color:
+        var(--color-stress) !important;
+}
 
-            opacity: 0;
-        }
 
-        /* =========================================================
-           PARTICLE CONTAINER
-        ========================================================= */
+.board-shake {
 
-        #particle-container {
-            position: absolute;
+    animation:
+        shake
+        0.18s
+        cubic-bezier(.36,.07,.19,.97)
+        both;
+}
 
-            inset: 0;
 
-            pointer-events: none;
+/* =========================================================
+   CENTER LINE
+========================================================= */
 
-            z-index: 90;
+#center-line {
 
-            overflow: hidden;
-        }
+    position: absolute;
 
-        /*
-            Particle pool.
-            Tidak membuat / menghapus DOM setiap frame.
-        */
+    top: 50%;
+    left: 0;
 
-        .particle {
-            position: absolute;
+    width: 500px;
+    height: 2px;
 
-            width: 4px;
-            height: 4px;
+    background-color:
+        rgba(102, 252, 241, 0.45);
 
-            border-radius: 50%;
+    transform:
+        translateY(-50%);
 
-            background-color: var(--color-ball);
+    z-index: 5;
 
-            opacity: 0;
+    animation:
+        pulse
+        2.5s
+        infinite
+        alternate;
+}
 
-            transform:
-                translate3d(0, 0, 0)
-                scale(0.5);
 
-            will-change:
-                transform,
-                opacity;
+/* =========================================================
+   PADDLES
+========================================================= */
 
-            box-shadow:
-                0 0 4px var(--color-ball);
+#top-paddle,
+#bottom-paddle {
 
-            pointer-events: none;
-        }
+    position: absolute;
 
-        .particle.active {
-            opacity: 0.65;
+    width: 80px;
+    height: 15px;
 
-            transform:
-                translate3d(0, 0, 0)
-                scale(1);
-        }
+    border-radius: 5px;
 
-        /* =========================================================
-           COUNTDOWN
-        ========================================================= */
+    z-index: 10;
 
-        #countdown-display {
-            position: absolute;
+    display: flex;
 
-            top: 50%;
-            left: 50%;
+    justify-content: center;
 
-            transform:
-                translate(-50%, -50%);
+    align-items: center;
 
-            color: var(--color-ball);
+    font-size: 11px;
 
-            font-size: clamp(3rem, 12vw, 5rem);
+    font-weight: bold;
 
-            font-weight: bold;
+    color:
+        var(--color-bg-dark);
 
-            text-shadow:
-                0 0 15px var(--color-ball);
+    will-change:
+        transform,
+        left;
 
-            z-index: 300;
+    transform:
+        translateZ(0);
+}
 
-            display: none;
 
-            pointer-events: none;
-        }
+/* TOP */
 
-        /* =========================================================
-           GAME OVER
-        ========================================================= */
+#top-paddle {
 
-        #game-message {
-            position: absolute;
+    top: 20px;
+    left: 210px;
 
-            inset: 0;
+    background-color:
+        var(--color-stress);
 
-            background-color:
-                rgba(0, 0, 0, 0.88);
+    box-shadow:
+        0 0 8px
+        rgba(255, 107, 107, 0.45);
+}
 
-            color: white;
 
-            display: none;
+/* BOTTOM */
 
-            flex-direction: column;
+#bottom-paddle {
 
-            justify-content: center;
-            align-items: center;
+    bottom: 20px;
+    left: 210px;
 
-            padding: 25px;
+    background-color:
+        var(--color-focus);
 
-            font-size: clamp(1.2rem, 5vw, 2rem);
+    box-shadow:
+        0 0 8px
+        rgba(78, 205, 196, 0.45);
+}
 
-            text-align: center;
 
-            z-index: 200;
+/* =========================================================
+   PADDLE BOUNCE
+========================================================= */
 
-            text-shadow:
-                0 0 15px rgba(78, 205, 196, 0.7);
-        }
+.paddle-bounce-stress {
 
-        #final-score {
-            margin-top: 10px;
-            font-size: 0.65em;
-            opacity: 0.8;
-        }
+    background-color:
+        var(--color-ball) !important;
 
-        #game-message button {
-            padding: 12px 22px;
+    transform:
+        translateY(5px)
+        translateZ(0);
+}
 
-            margin-top: 20px;
 
-            font-size: 0.75em;
+.paddle-bounce-focus {
 
-            cursor: pointer;
+    background-color:
+        var(--color-ball) !important;
 
-            background-color:
-                var(--color-focus);
+    transform:
+        translateY(-5px)
+        translateZ(0);
+}
 
-            color:
-                var(--color-bg-dark);
 
-            border: none;
+/* =========================================================
+   PADDLE TRAIL
+========================================================= */
 
-            border-radius: 12px;
+.paddle-trail-stress {
 
-            box-shadow:
-                -4px -4px 8px rgba(45, 45, 60, 0.35),
-                4px 4px 8px rgba(0, 0, 0, 0.8),
-                0 0 12px rgba(78, 205, 196, 0.45);
+    box-shadow:
 
-            touch-action: manipulation;
+        0 0 14px
+        rgba(255, 107, 107, 0.9) !important;
+}
 
-            -webkit-tap-highlight-color: transparent;
-        }
 
-        #game-message button:active {
-            transform: scale(0.97);
+.paddle-trail-focus {
 
-            box-shadow:
-                inset 3px 3px 5px rgba(0, 0, 0, 0.8);
-        }
+    box-shadow:
 
-        /* =========================================================
-           TOUCH CONTROLS
-        ========================================================= */
+        0 0 14px
+        rgba(78, 205, 196, 0.9) !important;
+}
 
-        #touch-controls {
-            width: min(var(--game-width), 92vw);
 
-            display: flex;
+/* =========================================================
+   AFTERGLOW
+========================================================= */
 
-            gap: 10px;
+.paddle-afterglow-stress {
 
-            margin-top: 10px;
+    box-shadow:
 
-            flex-shrink: 0;
-        }
+        0 0 25px
+        var(--color-ball),
 
-        .touch-button {
-            flex: 1;
+        0 0 10px
+        var(--color-stress) !important;
+}
 
-            min-height: 50px;
 
-            display: flex;
+.paddle-afterglow-focus {
 
-            align-items: center;
-            justify-content: center;
+    box-shadow:
 
-            padding: 10px;
+        0 0 25px
+        var(--color-ball),
 
-            background-color:
-                var(--color-bg-light);
+        0 0 10px
+        var(--color-focus) !important;
+}
 
-            color:
-                var(--color-focus);
 
-            font-weight: bold;
+/* =========================================================
+   BALL
+========================================================= */
 
-            text-align: center;
+#ball {
 
-            border-radius: 12px;
+    position: absolute;
 
-            cursor: pointer;
+    width: 15px;
+    height: 15px;
 
-            user-select: none;
-            -webkit-user-select: none;
+    background-color:
+        var(--color-ball);
 
-            touch-action: none;
+    border-radius: 50%;
 
-            -webkit-tap-highlight-color: transparent;
+    z-index: 100;
 
-            box-shadow:
-                -4px -4px 8px rgba(45, 45, 60, 0.35),
-                4px 4px 8px rgba(0, 0, 0, 0.8),
-                0 0 5px rgba(78, 205, 196, 0.4);
+    will-change:
+        left,
+        top;
 
-            transition:
-                background-color 0.08s,
-                color 0.08s,
-                transform 0.08s;
-        }
+    transform:
+        translateZ(0);
 
-        .touch-button.active {
-            background-color:
-                var(--color-focus);
+    box-shadow:
+        0 0 7px
+        var(--color-ball);
+}
 
-            color:
-                var(--color-bg-dark);
 
-            transform: scale(0.98);
+.ball-explosion-vfx {
 
-            box-shadow:
-                inset 3px 3px 5px rgba(0, 0, 0, 0.65);
-        }
+    transform:
+        scale(2.7)
+        translateZ(0);
 
-        /* =========================================================
-           LAPTOP / DESKTOP
-        ========================================================= */
+    opacity: 0;
+}
 
-        @media (min-width: 700px) and (min-height: 850px) {
-            #info-bar {
-                margin-bottom: 12px;
-            }
 
-            #touch-controls {
-                margin-top: 12px;
-            }
-        }
+/* =========================================================
+   PARTICLE CONTAINER
+========================================================= */
 
-        /* =========================================================
-           HP KECIL
-        ========================================================= */
+#particle-container {
 
-        @media (max-height: 700px) {
-            #info-bar {
-                margin-bottom: 5px;
-                padding: 6px 10px;
-            }
+    position: absolute;
 
-            #touch-controls {
-                margin-top: 5px;
-            }
+    left: 0;
+    top: 0;
 
-            .touch-button {
-                min-height: 44px;
-            }
-        }
+    width: 500px;
+    height: 700px;
 
-        /* =========================================================
-           REDUCED MOTION
-        ========================================================= */
+    pointer-events: none;
 
-        @media (prefers-reduced-motion: reduce) {
-            #center-line {
-                animation: none;
-            }
+    z-index: 90;
 
-            .board-shake {
-                animation: none;
-            }
-        }
-    </style>
+    overflow: hidden;
+
+    contain: strict;
+}
+
+
+.particle {
+
+    position: absolute;
+
+    width: 4px;
+    height: 4px;
+
+    border-radius: 50%;
+
+    background-color:
+        var(--color-ball);
+
+    opacity: 0.7;
+
+    will-change:
+        transform,
+        opacity;
+
+    transform:
+        translate3d(0, 0, 0)
+        scale(1);
+
+    box-shadow:
+        0 0 4px
+        var(--color-ball);
+}
+
+
+/* =========================================================
+   COUNTDOWN
+========================================================= */
+
+#countdown-display {
+
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    color:
+        var(--color-ball);
+
+    font-size: 80px;
+
+    font-weight: bold;
+
+    text-shadow:
+        0 0 15px
+        var(--color-ball);
+
+    z-index: 300;
+
+    display: none;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+#game-message {
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 500px;
+    height: 700px;
+
+    background:
+        rgba(0, 0, 0, 0.88);
+
+    color: white;
+
+    display: none;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 25px;
+
+    font-size: 28px;
+
+    text-align: center;
+
+    z-index: 200;
+
+    text-shadow:
+        0 0 15px
+        rgba(78, 205, 196, 0.7);
+}
+
+
+#message-text {
+
+    max-width: 440px;
+}
+
+
+#final-score {
+
+    margin-top: 8px;
+}
+
+
+#game-message button {
+
+    padding:
+        12px 24px;
+
+    margin-top:
+        22px;
+
+    font-size:
+        17px;
+
+    font-weight:
+        bold;
+
+    cursor:
+        pointer;
+
+    background:
+        var(--color-focus);
+
+    color:
+        var(--color-bg-dark);
+
+    border:
+        none;
+
+    border-radius:
+        12px;
+
+    box-shadow:
+        0 0 12px
+        rgba(78, 205, 196, 0.5);
+
+    touch-action:
+        manipulation;
+}
+
+
+#game-message button:active {
+
+    transform:
+        scale(0.97);
+}
+
+
+/* =========================================================
+   TOUCH CONTROLS
+========================================================= */
+
+#touch-controls {
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    gap: 12px;
+
+    margin-top: 9px;
+}
+
+
+.touch-button {
+
+    flex: 1;
+
+    min-width: 0;
+
+    height: 64px;
+
+    display: flex;
+
+    justify-content:
+        center;
+
+    align-items: center;
+
+    background:
+        var(--color-bg-light);
+
+    color:
+        var(--color-focus);
+
+    font-weight:
+        bold;
+
+    font-size:
+        1rem;
+
+    text-align:
+        center;
+
+    border-radius:
+        14px;
+
+    user-select:
+        none;
+
+    -webkit-user-select:
+        none;
+
+    touch-action:
+        none;
+
+    cursor:
+        pointer;
+
+    box-shadow:
+
+        -4px -4px 8px
+        rgba(45, 45, 60, 0.4),
+
+        4px 4px 8px
+        rgba(0, 0, 0, 0.8),
+
+        0 0 7px
+        rgba(78, 205, 196, 0.4);
+
+    transition:
+
+        transform 0.08s ease,
+
+        background-color 0.08s ease,
+
+        box-shadow 0.08s ease;
+}
+
+
+.touch-button.active {
+
+    background:
+        var(--color-focus);
+
+    color:
+        var(--color-bg-dark);
+
+    transform:
+        scale(0.96);
+
+    box-shadow:
+
+        inset 3px 3px 6px
+        rgba(0, 0, 0, 0.7),
+
+        0 0 15px
+        rgba(78, 205, 196, 0.7);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    #game-wrapper {
+
+        width: 94vw;
+    }
+
+
+    #info-bar {
+
+        margin-bottom: 7px;
+
+        padding:
+            7px 10px;
+
+        font-size:
+            clamp(
+                0.65rem,
+                2.8vw,
+                0.9rem
+            );
+    }
+
+
+    #game-board {
+
+        width:
+            94vw;
+    }
+
+
+    #touch-controls {
+
+        margin-top:
+            8px;
+
+        gap:
+            10px;
+    }
+
+
+    .touch-button {
+
+        height:
+            68px;
+
+        font-size:
+            1rem;
+    }
+}
+
+
+/* =========================================================
+   HP PENDEK / LANDSCAPE
+========================================================= */
+
+@media (max-height: 650px) {
+
+    #game-wrapper {
+
+        transform:
+            scale(
+                min(
+                    1,
+                    calc(100dvh / 750)
+                )
+            );
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    #center-line {
+
+        animation:
+            none;
+    }
+
+
+    .board-shake {
+
+        animation:
+            none;
+    }
+}
+
+</style>
 </head>
+
 
 <body>
 
-    <!-- =========================================================
+
+<div id="game-wrapper">
+
+
+    <!-- =====================================================
          SCORE
-    ========================================================== -->
+    ====================================================== -->
 
     <div id="info-bar">
+
         <div id="player-score">
             PLAYER (Kamu): 0
         </div>
@@ -740,947 +919,625 @@
         <div id="opponent-score">
             STRES (Musuh): 0
         </div>
+
     </div>
 
 
-    <!-- =========================================================
-         GAME BOARD
-    ========================================================== -->
+    <!-- =====================================================
+         GAME
+    ====================================================== -->
 
     <div id="game-board">
 
-        <div id="center-line"></div>
 
-        <div id="top-paddle">
-            STRES
+        <div id="game-world">
+
+
+            <div id="center-line"></div>
+
+
+            <div id="top-paddle">
+                STRES
+            </div>
+
+
+            <div id="ball"></div>
+
+
+            <div id="bottom-paddle">
+                PLAYER
+            </div>
+
+
+            <div id="particle-container"></div>
+
+
+            <div id="countdown-display"></div>
+
+
+            <!-- GAME OVER -->
+
+            <div id="game-message">
+
+                <div id="message-text"></div>
+
+                <div id="final-score"></div>
+
+                <button id="retry-button">
+                    COBA LAGI
+                </button>
+
+            </div>
+
+
         </div>
 
-        <div id="ball"></div>
-
-        <div id="bottom-paddle">
-            PLAYER
-        </div>
-
-        <div id="particle-container"></div>
-
-        <div id="countdown-display"></div>
-
-        <div id="game-message">
-
-            <div id="message-text"></div>
-
-            <div id="final-score"></div>
-
-            <button id="restart-button">
-                COBA LAGI
-            </button>
-
-        </div>
 
     </div>
 
 
-    <!-- =========================================================
-         MOBILE CONTROLS
-    ========================================================== -->
+    <!-- =====================================================
+         TOUCH BUTTONS
+    ====================================================== -->
 
     <div id="touch-controls">
+
 
         <div
             class="touch-button"
             id="left-button"
-            role="button"
-            aria-label="Gerak kiri"
         >
-            KIRI (◀)
+            ◀ &nbsp; KIRI
         </div>
+
 
         <div
             class="touch-button"
             id="right-button"
-            role="button"
-            aria-label="Gerak kanan"
         >
-            KANAN (▶)
+            KANAN &nbsp; ▶
         </div>
+
 
     </div>
 
 
-    <script>
-        /* =========================================================
-           DOM
-        ========================================================= */
+</div>
 
-        const gameBoard =
-            document.getElementById('game-board');
 
-        const bottomPaddle =
-            document.getElementById('bottom-paddle');
+<script>
 
-        const topPaddle =
-            document.getElementById('top-paddle');
+/* =========================================================
+   DOM
+========================================================= */
 
-        const ballElement =
-            document.getElementById('ball');
+const gameBoard =
+    document.getElementById(
+        'game-board'
+    );
 
-        const particleContainer =
-            document.getElementById('particle-container');
+const gameWorld =
+    document.getElementById(
+        'game-world'
+    );
 
-        const playerScoreElement =
-            document.getElementById('player-score');
+const bottomPaddle =
+    document.getElementById(
+        'bottom-paddle'
+    );
 
-        const opponentScoreElement =
-            document.getElementById('opponent-score');
+const topPaddle =
+    document.getElementById(
+        'top-paddle'
+    );
 
-        const gameMessage =
-            document.getElementById('game-message');
+const ballElement =
+    document.getElementById(
+        'ball'
+    );
 
-        const messageText =
-            document.getElementById('message-text');
+const particleContainer =
+    document.getElementById(
+        'particle-container'
+    );
 
-        const finalScore =
-            document.getElementById('final-score');
+const playerScoreElement =
+    document.getElementById(
+        'player-score'
+    );
 
-        const countdownDisplay =
-            document.getElementById('countdown-display');
+const opponentScoreElement =
+    document.getElementById(
+        'opponent-score'
+    );
 
-        const leftButton =
-            document.getElementById('left-button');
+const gameMessage =
+    document.getElementById(
+        'game-message'
+    );
 
-        const rightButton =
-            document.getElementById('right-button');
+const messageText =
+    document.getElementById(
+        'message-text'
+    );
 
-        const restartButton =
-            document.getElementById('restart-button');
+const finalScore =
+    document.getElementById(
+        'final-score'
+    );
 
+const countdownDisplay =
+    document.getElementById(
+        'countdown-display'
+    );
 
-        /* =========================================================
-           UKURAN GAME INTERNAL
-           Jangan ubah.
-        ========================================================== */
+const leftButton =
+    document.getElementById(
+        'left-button'
+    );
 
-        const boardWidth = 500;
-        const boardHeight = 700;
+const rightButton =
+    document.getElementById(
+        'right-button'
+    );
 
-        const paddleWidth = 80;
-        const paddleHeight = 15;
+const retryButton =
+    document.getElementById(
+        'retry-button'
+    );
 
-        const ballSize = 15;
 
-        const STARTING_BALL_Y =
-            (boardHeight / 3) -
-            (ballSize / 3);
+/* =========================================================
+   GAME SIZE
+========================================================= */
 
+const boardWidth = 500;
 
-        /* =========================================================
-           PLAYER
-        ========================================================== */
+const boardHeight = 700;
 
-        let playerX =
-            (boardWidth / 2) -
-            (paddleWidth / 2);
+const paddleWidth = 80;
 
-        let opponentX =
-            (boardWidth / 2) -
-            (paddleWidth / 2);
+const paddleHeight = 15;
 
-        const FIXED_PADDLE_SPEED = 800;
+const ballSize = 15;
 
-        let keys = {};
+const STARTING_BALL_Y =
+    (boardHeight / 3) -
+    (ballSize / 3);
 
 
-        /* =========================================================
-           BALL
-        ========================================================== */
+/* =========================================================
+   PLAYER
+========================================================= */
 
-        let ballX = 0;
-        let ballY = 0;
+let playerX =
+    boardWidth / 2 -
+    paddleWidth / 2;
 
-        let ballSpeedX = 0;
-        let ballSpeedY = 0;
+let opponentX =
+    boardWidth / 2 -
+    paddleWidth / 2;
 
-        const initialBallSpeed = 500;
+const FIXED_PADDLE_SPEED = 800;
 
 
-        /* =========================================================
-           SCORE
-        ========================================================== */
+/* =========================================================
+   INPUT
+========================================================= */
 
-        let playerScore = 0;
-        let opponentScore = 0;
+const keys = {
 
-        const maxScore = 5;
+    ArrowLeft: false,
 
+    ArrowRight: false
 
-        /* =========================================================
-           AI
-        ========================================================== */
+};
 
-        let opponentSpeedMultiplier = 1.0;
 
-        const SPEED_INCREMENT_PER_POINT = 0.15;
+/* =========================================================
+   BALL
+========================================================= */
 
+let ballX = 0;
 
-        /* =========================================================
-           GAME STATE
-        ========================================================== */
+let ballY = 0;
 
-        let isGameRunning = false;
-        let isPaused = true;
+let ballSpeedX = 0;
 
-        let lastTimestamp = 0;
+let ballSpeedY = 0;
 
-        let countdownTimer = null;
+const initialBallSpeed = 500;
 
 
-        /* =========================================================
-           PERFORMANCE
-        ========================================================== */
+/* =========================================================
+   SCORE
+========================================================= */
 
-        /*
-            Device dengan CPU <= 4 core diberi particle lebih sedikit.
-        */
+let playerScore = 0;
 
-        const isLowPowerDevice =
-            navigator.hardwareConcurrency &&
-            navigator.hardwareConcurrency <= 4;
+let opponentScore = 0;
 
-        const PARTICLE_COUNT =
-            isLowPowerDevice ? 8 : 16;
+const maxScore = 5;
 
-        const PARTICLE_INTERVAL =
-            isLowPowerDevice ? 55 : 40;
 
-        let particleTimer = null;
+/* =========================================================
+   AI
+========================================================= */
 
+let opponentSpeedMultiplier = 1;
 
-        /* =========================================================
-           AUDIO
-        ========================================================== */
+const SPEED_INCREMENT_PER_POINT = 0.15;
 
-        let audioContext = null;
 
-        function initAudio() {
-            if (!audioContext) {
-                const AudioContext =
-                    window.AudioContext ||
-                    window.webkitAudioContext;
+/* =========================================================
+   GAME STATE
+========================================================= */
 
-                if (!AudioContext) {
-                    return;
-                }
+let isGameRunning = false;
 
-                audioContext =
-                    new AudioContext();
-            }
+let isPaused = true;
 
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-        }
+let lastTimestamp = 0;
 
+let animationFrameId = null;
 
-        /*
-            SFX dibuat langsung oleh browser.
+let countdownTimer = null;
 
-            Tidak perlu MP3/WAV.
-            Ukuran file tambahan = 0 KB.
-        */
+let transitionTimers = [];
 
-        function playSFX(
-            frequency = 440,
-            duration = 0.05,
-            volume = 0.025,
-            type = 'square'
-        ) {
-            if (!audioContext) {
-                return;
-            }
 
-            try {
-                const oscillator =
-                    audioContext.createOscillator();
+/* =========================================================
+   PARTICLE POOL
+========================================================= */
 
-                const gain =
-                    audioContext.createGain();
+const MAX_PARTICLES = 18;
 
-                const now =
-                    audioContext.currentTime;
+const particles = [];
 
-                oscillator.type = type;
+let particleIndex = 0;
 
-                oscillator.frequency.setValueAtTime(
-                    frequency,
-                    now
-                );
+let lastParticleTime = 0;
 
-                gain.gain.setValueAtTime(
-                    volume,
-                    now
-                );
+const PARTICLE_INTERVAL = 55;
 
-                gain.gain.exponentialRampToValueAtTime(
-                    0.001,
-                    now + duration
-                );
 
-                oscillator.connect(gain);
+for (
+    let i = 0;
+    i < MAX_PARTICLES;
+    i++
+) {
 
-                gain.connect(
-                    audioContext.destination
-                );
+    const element =
+        document.createElement(
+            'div'
+        );
 
-                oscillator.start(now);
+    element.className =
+        'particle';
 
-                oscillator.stop(
-                    now + duration
-                );
-            } catch (error) {
-                /*
-                    Audio tidak boleh membuat game crash.
-                */
-            }
-        }
+    element.style.display =
+        'none';
 
+    particleContainer.appendChild(
+        element
+    );
 
-        function playPaddleSFX(isPlayer) {
-            initAudio();
 
-            playSFX(
-                isPlayer ? 520 : 380,
-                0.045,
-                0.022,
-                'square'
-            );
-        }
+    particles.push({
 
+        element: element,
 
-        function playWallSFX() {
-            initAudio();
+        active: false,
 
-            playSFX(
-                300,
-                0.035,
-                0.015,
-                'square'
-            );
-        }
+        life: 0,
 
+        maxLife: 260
 
-        function playScoreSFX(isPlayer) {
-            initAudio();
+    });
+}
 
-            if (isPlayer) {
-                playSFX(
-                    650,
-                    0.07,
-                    0.025,
-                    'square'
-                );
 
-                setTimeout(() => {
-                    playSFX(
-                        900,
-                        0.1,
-                        0.02,
-                        'square'
-                    );
-                }, 70);
-            } else {
-                playSFX(
-                    220,
-                    0.12,
-                    0.025,
-                    'sawtooth'
-                );
-            }
-        }
+/* =========================================================
+   RESPONSIVE SCALE
+========================================================= */
 
+function resizeGame() {
 
-        /* =========================================================
-           PARTICLE POOL
-        ========================================================== */
+    const rect =
+        gameBoard.getBoundingClientRect();
 
-        const particles = [];
+    const scale =
+        rect.width /
+        boardWidth;
 
-        function createParticlePool() {
+    gameWorld.style.transform =
+        `scale(${scale})`;
+}
 
-            for (
-                let i = 0;
-                i < PARTICLE_COUNT;
-                i++
-            ) {
-                const element =
-                    document.createElement('div');
 
-                element.className =
-                    'particle';
+resizeGame();
 
-                particleContainer.appendChild(
-                    element
-                );
 
-                particles.push({
-                    element: element,
-                    life: 0,
-                    maxLife: 0,
-                    x: 0,
-                    y: 0
-                });
-            }
-        }
+window.addEventListener(
+    'resize',
+    resizeGame,
+    {
+        passive: true
+    }
+);
 
 
-        function createBallParticle() {
+/* =========================================================
+   INPUT RESET
+========================================================= */
 
-            if (
-                !isGameRunning ||
-                isPaused
-            ) {
-                return;
-            }
+function resetInputState() {
 
-            /*
-                Cari particle yang sedang tidak dipakai.
-            */
+    keys.ArrowLeft = false;
 
-            const particle =
-                particles.find(
-                    p => p.life <= 0
-                );
+    keys.ArrowRight = false;
 
-            if (!particle) {
-                return;
-            }
+    leftButton.classList.remove(
+        'active'
+    );
 
-            const element =
-                particle.element;
+    rightButton.classList.remove(
+        'active'
+    );
 
-            const size =
-                Math.random() * 2 + 2;
+    bottomPaddle.classList.remove(
+        'paddle-trail-focus'
+    );
 
-            particle.x =
-                ballX +
-                ballSize / 2 -
-                size / 2;
+    topPaddle.classList.remove(
+        'paddle-trail-stress'
+    );
+}
 
-            particle.y =
-                ballY +
-                ballSize / 2 -
-                size / 2;
 
-            particle.life = 180;
-            particle.maxLife = 180;
+/* =========================================================
+   PARTICLES
+========================================================= */
 
-            element.style.width =
-                `${size}px`;
+function spawnParticle(timestamp) {
 
-            element.style.height =
-                `${size}px`;
+    if (
+        !isGameRunning ||
+        isPaused
+    ) {
 
-            element.style.left =
-                `${particle.x}px`;
+        return;
+    }
 
-            element.style.top =
-                `${particle.y}px`;
 
-            element.style.boxShadow =
-                `0 0 ${size}px var(--color-ball)`;
+    if (
+        timestamp -
+        lastParticleTime <
+        PARTICLE_INTERVAL
+    ) {
 
-            element.classList.add(
-                'active'
-            );
+        return;
+    }
 
-            /*
-                Particle akan di-fade oleh updateParticles()
-                bukan setTimeout.
-            */
-        }
 
+    lastParticleTime =
+        timestamp;
 
-        function updateParticles(deltaTime) {
 
-            for (const particle of particles) {
+    const particle =
+        particles[
+            particleIndex
+        ];
 
-                if (particle.life <= 0) {
-                    continue;
-                }
 
-                particle.life -=
-                    deltaTime;
+    particleIndex =
+        (
+            particleIndex + 1
+        ) %
+        MAX_PARTICLES;
 
-                const ratio =
-                    Math.max(
-                        0,
-                        particle.life /
-                        particle.maxLife
-                    );
 
-                particle.element.style.opacity =
-                    `${ratio * 0.65}`;
+    const element =
+        particle.element;
 
-                particle.element.style.transform =
-                    `translate3d(
-                        0,
-                        ${-ratio * 5}px,
-                        0
-                    ) scale(${0.5 + ratio * 0.5})`;
 
-                if (particle.life <= 0) {
+    const size =
+        2 +
+        Math.random() * 2;
 
-                    particle.element.classList.remove(
-                        'active'
-                    );
 
-                    particle.element.style.opacity =
-                        '0';
-                }
-            }
-        }
+    element.style.display =
+        'block';
 
 
-        function startParticleTrail() {
+    element.style.width =
+        `${size}px`;
 
-            stopParticleTrail();
 
-            particleTimer =
-                setInterval(
-                    createBallParticle,
-                    PARTICLE_INTERVAL
-                );
-        }
+    element.style.height =
+        `${size}px`;
 
 
-        function stopParticleTrail() {
+    element.style.left =
+        `${ballX + ballSize / 2}px`;
 
-            if (particleTimer) {
 
-                clearInterval(
-                    particleTimer
-                );
+    element.style.top =
+        `${ballY + ballSize / 2}px`;
 
-                particleTimer = null;
-            }
-        }
 
+    element.style.opacity =
+        '0.75';
 
-        function clearParticles() {
 
-            for (const particle of particles) {
+    element.style.transform =
+        'translate3d(-50%, -50%, 0) scale(1)';
 
-                particle.life = 0;
 
-                particle.element.classList.remove(
-                    'active'
-                );
+    particle.active =
+        true;
 
-                particle.element.style.opacity =
-                    '0';
-            }
-        }
+    particle.life =
+        0;
 
+    particle.maxLife =
+        260;
+}
 
-        /* =========================================================
-           INPUT
-        ========================================================== */
 
-        function resetInputState() {
+function updateParticles(deltaTime) {
 
-            keys['ArrowLeft'] = false;
-            keys['ArrowRight'] = false;
+    for (
+        const particle of particles
+    ) {
 
-            leftButton.classList.remove(
-                'active'
-            );
-
-            rightButton.classList.remove(
-                'active'
-            );
-
-            bottomPaddle.classList.remove(
-                'paddle-trail-focus'
-            );
-
-            topPaddle.classList.remove(
-                'paddle-trail-stress'
-            );
-        }
-
-
-        function setMovement(
-            key,
-            value
+        if (
+            !particle.active
         ) {
 
-            if (
-                !isGameRunning ||
-                isPaused
-            ) {
-                return;
-            }
-
-            keys[key] = value;
+            continue;
         }
 
 
-        /* =========================================================
-           KEYBOARD
-        ========================================================== */
-
-        document.addEventListener(
-            'keydown',
-            (event) => {
-
-                if (
-                    event.key === 'ArrowLeft' ||
-                    event.key.toLowerCase() === 'a'
-                ) {
-
-                    event.preventDefault();
-
-                    setMovement(
-                        'ArrowLeft',
-                        true
-                    );
-                }
-
-                else if (
-                    event.key === 'ArrowRight' ||
-                    event.key.toLowerCase() === 'd'
-                ) {
-
-                    event.preventDefault();
-
-                    setMovement(
-                        'ArrowRight',
-                        true
-                    );
-                }
-            },
-            { passive: false }
-        );
+        particle.life +=
+            deltaTime;
 
 
-        document.addEventListener(
-            'keyup',
-            (event) => {
-
-                if (
-                    event.key === 'ArrowLeft' ||
-                    event.key.toLowerCase() === 'a'
-                ) {
-
-                    setMovement(
-                        'ArrowLeft',
-                        false
-                    );
-                }
-
-                else if (
-                    event.key === 'ArrowRight' ||
-                    event.key.toLowerCase() === 'd'
-                ) {
-
-                    setMovement(
-                        'ArrowRight',
-                        false
-                    );
-                }
-            }
-        );
+        const progress =
+            particle.life /
+            particle.maxLife;
 
 
-        /*
-            Kalau tab kehilangan fokus,
-            jangan sampai paddle terus bergerak.
-        */
-
-        window.addEventListener(
-            'blur',
-            resetInputState
-        );
-
-
-        /* =========================================================
-           MOBILE POINTER CONTROLS
-        ========================================================== */
-
-        function startPointerMove(
-            direction,
-            event,
-            button
+        if (
+            progress >= 1
         ) {
 
-            event.preventDefault();
+            particle.active =
+                false;
 
-            initAudio();
+            particle.element.style.display =
+                'none';
 
-            setMovement(
-                direction,
-                true
-            );
-
-            button.classList.add(
-                'active'
-            );
-
-            try {
-                button.setPointerCapture(
-                    event.pointerId
-                );
-            } catch (error) {}
+            continue;
         }
 
 
-        function stopPointerMove(
-            direction,
-            event,
-            button
-        ) {
-
-            event.preventDefault();
-
-            setMovement(
-                direction,
-                false
-            );
-
-            button.classList.remove(
-                'active'
-            );
-        }
+        particle.element.style.opacity =
+            0.75 *
+            (1 - progress);
 
 
-        leftButton.addEventListener(
-            'pointerdown',
-            (event) => {
-
-                startPointerMove(
-                    'ArrowLeft',
-                    event,
-                    leftButton
-                );
-            }
-        );
+        const scale =
+            1 -
+            progress * 0.7;
 
 
-        rightButton.addEventListener(
-            'pointerdown',
-            (event) => {
-
-                startPointerMove(
-                    'ArrowRight',
-                    event,
-                    rightButton
-                );
-            }
-        );
+        particle.element.style.transform =
+            `translate3d(-50%, -50%, 0) scale(${scale})`;
+    }
+}
 
 
-        leftButton.addEventListener(
-            'pointerup',
-            (event) => {
+function clearParticles() {
 
-                stopPointerMove(
-                    'ArrowLeft',
-                    event,
-                    leftButton
-                );
-            }
-        );
+    for (
+        const particle of particles
+    ) {
 
+        particle.active =
+            false;
 
-        rightButton.addEventListener(
-            'pointerup',
-            (event) => {
-
-                stopPointerMove(
-                    'ArrowRight',
-                    event,
-                    rightButton
-                );
-            }
-        );
+        particle.element.style.display =
+            'none';
+    }
+}
 
 
-        leftButton.addEventListener(
-            'pointercancel',
-            (event) => {
+/* =========================================================
+   PADDLE VFX
+========================================================= */
 
-                stopPointerMove(
-                    'ArrowLeft',
-                    event,
-                    leftButton
-                );
-            }
-        );
+function triggerPaddleVFX(
+    paddleElement,
+    vfxClass
+) {
 
-
-        rightButton.addEventListener(
-            'pointercancel',
-            (event) => {
-
-                stopPointerMove(
-                    'ArrowRight',
-                    event,
-                    rightButton
-                );
-            }
-        );
+    const afterglowClass =
+        vfxClass.includes('focus')
+            ? 'paddle-afterglow-focus'
+            : 'paddle-afterglow-stress';
 
 
-        leftButton.addEventListener(
-            'lostpointercapture',
+    paddleElement.classList.add(
+        vfxClass
+    );
+
+
+    paddleElement.classList.add(
+        afterglowClass
+    );
+
+
+    const timer1 =
+        setTimeout(
             () => {
-
-                keys['ArrowLeft'] =
-                    false;
-
-                leftButton.classList.remove(
-                    'active'
-                );
-            }
-        );
-
-
-        rightButton.addEventListener(
-            'lostpointercapture',
-            () => {
-
-                keys['ArrowRight'] =
-                    false;
-
-                rightButton.classList.remove(
-                    'active'
-                );
-            }
-        );
-
-
-        /* =========================================================
-           RENDER POSISI
-        ========================================================== */
-
-        function renderPaddles() {
-
-            /*
-                Posisi horizontal menggunakan transform.
-                Lebih ringan daripada left setiap frame.
-            */
-
-            bottomPaddle.style.transform =
-                `translate3d(
-                    ${playerX}px,
-                    0,
-                    0
-                )`;
-
-            topPaddle.style.transform =
-                `translate3d(
-                    ${opponentX}px,
-                    0,
-                    0
-                )`;
-        }
-
-
-        function renderBall() {
-
-            ballElement.style.setProperty(
-                '--ball-x',
-                `${ballX}px`
-            );
-
-            ballElement.style.setProperty(
-                '--ball-y',
-                `${ballY}px`
-            );
-
-            /*
-                Jika tidak sedang explosion,
-                tampilkan posisi normal.
-            */
-
-            if (
-                !ballElement.classList.contains(
-                    'ball-explosion-vfx'
-                )
-            ) {
-
-                ballElement.style.transform =
-                    `translate3d(
-                        ${ballX}px,
-                        ${ballY}px,
-                        0
-                    )`;
-            }
-        }
-
-
-        /* =========================================================
-           PADDLE VFX
-        ========================================================== */
-
-        function triggerPaddleVFX(
-            paddleElement,
-            vfxClass
-        ) {
-
-            const afterglowClass =
-                vfxClass.includes('focus')
-                    ? 'paddle-afterglow-focus'
-                    : 'paddle-afterglow-stress';
-
-            paddleElement.classList.add(
-                vfxClass
-            );
-
-            paddleElement.classList.add(
-                afterglowClass
-            );
-
-            setTimeout(() => {
 
                 paddleElement.classList.remove(
                     vfxClass
                 );
 
-            }, 90);
+            },
+            90
+        );
 
 
-            setTimeout(() => {
+    const timer2 =
+        setTimeout(
+            () => {
 
                 paddleElement.classList.remove(
                     afterglowClass
                 );
 
-            }, 180);
-        }
+            },
+            180
+        );
 
 
-        /* =========================================================
-           SCORE VFX
-        ========================================================== */
+    transitionTimers.push(
+        timer1,
+        timer2
+    );
+}
 
-        function triggerScoreVFX(
-            isPlayerScore
-        ) {
 
-            const vfxClass =
-                isPlayerScore
-                    ? 'score-focus-vfx'
-                    : 'score-stress-vfx';
+/* =========================================================
+   SCORE VFX
+========================================================= */
 
-            gameBoard.classList.add(
-                vfxClass
-            );
+function triggerScoreVFX(
+    isPlayerScore
+) {
 
-            gameBoard.classList.add(
-                'board-shake'
-            );
+    const vfxClass =
+        isPlayerScore
+            ? 'score-focus-vfx'
+            : 'score-stress-vfx';
 
-            setTimeout(() => {
+
+    gameBoard.classList.add(
+        vfxClass
+    );
+
+
+    gameBoard.classList.add(
+        'board-shake'
+    );
+
+
+    const timer =
+        setTimeout(
+            () => {
 
                 gameBoard.classList.remove(
                     vfxClass
@@ -1690,701 +1547,1458 @@
                     'board-shake'
                 );
 
-            }, 350);
-        }
+            },
+            300
+        );
 
 
-        /* =========================================================
-           BALL EXPLOSION
-        ========================================================== */
-
-        function triggerBallExplosion() {
-
-            ballElement.style.setProperty(
-                '--ball-x',
-                `${ballX}px`
-            );
-
-            ballElement.style.setProperty(
-                '--ball-y',
-                `${ballY}px`
-            );
-
-            ballElement.classList.add(
-                'ball-explosion-vfx'
-            );
-        }
+    transitionTimers.push(
+        timer
+    );
+}
 
 
-        /* =========================================================
-           BALL VFX
-        ========================================================== */
+/* =========================================================
+   BALL EXPLOSION
+========================================================= */
 
-        let lastBallGlowLevel = -1;
+function triggerBallExplosion() {
 
-
-        function updateBallVFX() {
-
-            if (
-                !isGameRunning ||
-                isPaused
-            ) {
-
-                if (
-                    lastBallGlowLevel !== 0
-                ) {
-
-                    ballElement.style.boxShadow =
-                        '0 0 7px var(--color-ball)';
-
-                    lastBallGlowLevel = 0;
-                }
-
-                return;
-            }
+    ballElement.classList.add(
+        'ball-explosion-vfx'
+    );
 
 
-            const currentSpeed =
-                Math.sqrt(
-                    ballSpeedX ** 2 +
-                    ballSpeedY ** 2
+    const timer =
+        setTimeout(
+            () => {
+
+                ballElement.classList.remove(
+                    'ball-explosion-vfx'
                 );
 
-
-            const maxSpeed =
-                2.0 *
-                initialBallSpeed;
-
-
-            const ratio =
-                Math.min(
-                    1,
-                    currentSpeed /
-                    maxSpeed
-                );
+            },
+            220
+        );
 
 
-            /*
-                Jangan ubah box-shadow setiap frame.
-
-                Hanya 3 level glow.
-            */
-
-            const glowLevel =
-                ratio < 0.45
-                    ? 0
-                    : ratio < 0.75
-                        ? 1
-                        : 2;
+    transitionTimers.push(
+        timer
+    );
+}
 
 
-            if (
-                glowLevel ===
-                lastBallGlowLevel
-            ) {
-                return;
-            }
+/* =========================================================
+   PADDLE TRAIL
+========================================================= */
+
+function updatePaddleTrail() {
+
+    const playerMoving =
+        keys.ArrowLeft ||
+        keys.ArrowRight;
 
 
-            lastBallGlowLevel =
-                glowLevel;
+    if (
+        playerMoving
+    ) {
+
+        bottomPaddle.classList.add(
+            'paddle-trail-focus'
+        );
+
+    } else {
+
+        bottomPaddle.classList.remove(
+            'paddle-trail-focus'
+        );
+    }
 
 
-            if (glowLevel === 0) {
-
-                ballElement.style.boxShadow =
-                    '0 0 7px var(--color-ball)';
-
-            }
-
-            else if (glowLevel === 1) {
-
-                ballElement.style.boxShadow =
-                    '0 0 11px var(--color-ball)';
-
-            }
-
-            else {
-
-                ballElement.style.boxShadow =
-                    '0 0 16px var(--color-ball)';
-            }
-        }
+    const isAITurn =
+        ballSpeedY < 0;
 
 
-        /* =========================================================
-           PADDLE TRAIL
-        ========================================================== */
-
-        function updatePaddleTrail() {
-
-            const playerIsMoving =
-                keys['ArrowLeft'] ||
-                keys['ArrowRight'];
-
-
-            if (playerIsMoving) {
-
-                bottomPaddle.classList.add(
-                    'paddle-trail-focus'
-                );
-
-            } else {
-
-                bottomPaddle.classList.remove(
-                    'paddle-trail-focus'
-                );
-            }
-
-
-            const isAITurn =
-                ballSpeedY < 0;
-
-
-            const isAIPursuing =
-                Math.abs(
-                    ballX +
-                    ballSize / 2 -
-                    (
-                        opponentX +
-                        paddleWidth / 2
-                    )
-                ) > 5;
-
-
-            if (
-                isAITurn &&
-                isAIPursuing
-            ) {
-
-                topPaddle.classList.add(
-                    'paddle-trail-stress'
-                );
-
-            } else {
-
-                topPaddle.classList.remove(
-                    'paddle-trail-stress'
-                );
-            }
-        }
-
-
-        /* =========================================================
-           PLAYER UPDATE
-        ========================================================== */
-
-        function updatePlayer(
-            deltaTime
-        ) {
-
-            const actualSpeed =
-                FIXED_PADDLE_SPEED *
-                deltaTime /
-                1000;
-
-
-            if (
-                keys['ArrowLeft']
-            ) {
-
-                playerX -=
-                    actualSpeed;
-            }
-
-
-            if (
-                keys['ArrowRight']
-            ) {
-
-                playerX +=
-                    actualSpeed;
-            }
-
-
-            if (playerX < 0) {
-                playerX = 0;
-            }
-
-
-            if (
-                playerX >
-                boardWidth -
-                paddleWidth
-            ) {
-
-                playerX =
-                    boardWidth -
-                    paddleWidth;
-            }
-
-
-            renderPaddles();
-        }
-
-
-        /* =========================================================
-           AI UPDATE
-        ========================================================== */
-
-        function updateOpponent(
-            deltaTime
-        ) {
-
-            const opponentCenter =
+    const isAIPursuing =
+        Math.abs(
+            ballX +
+            ballSize / 2 -
+            (
                 opponentX +
-                paddleWidth / 2;
+                paddleWidth / 2
+            )
+        ) > 5;
 
 
-            const ballCenter =
-                ballX +
-                ballSize / 2;
+    if (
+        isAITurn &&
+        isAIPursuing
+    ) {
+
+        topPaddle.classList.add(
+            'paddle-trail-stress'
+        );
+
+    } else {
+
+        topPaddle.classList.remove(
+            'paddle-trail-stress'
+        );
+    }
+}
 
 
-            const baseAISpeed =
-                initialBallSpeed *
-                0.98;
+/* =========================================================
+   MOVEMENT
+========================================================= */
+
+function setMovement(
+    key,
+    value
+) {
+
+    if (
+        !isGameRunning ||
+        isPaused
+    ) {
+
+        return;
+    }
 
 
-            const aiSpeed =
-                baseAISpeed *
-                opponentSpeedMultiplier *
-                deltaTime /
-                1000;
+    keys[key] =
+        value;
+}
 
 
-            const margin = 2;
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+document.addEventListener(
+    'keydown',
+    (event) => {
+
+        const key =
+            event.key.toLowerCase();
 
 
-            if (
-                ballSpeedY < 0
-            ) {
+        if (
+            event.key ===
+            'ArrowLeft' ||
+            key === 'a'
+        ) {
 
-                if (
-                    ballCenter <
-                    opponentCenter -
-                    margin
-                ) {
+            setMovement(
+                'ArrowLeft',
+                true
+            );
 
-                    opponentX -=
-                        aiSpeed;
+            event.preventDefault();
 
-                }
-
-                else if (
-                    ballCenter >
-                    opponentCenter +
-                    margin
-                ) {
-
-                    opponentX +=
-                        aiSpeed;
-                }
-            }
-
-
-            if (
-                opponentX < 0
-            ) {
-
-                opponentX = 0;
-            }
-
-
-            if (
-                opponentX >
-                boardWidth -
-                paddleWidth
-            ) {
-
-                opponentX =
-                    boardWidth -
-                    paddleWidth;
-            }
-
-
-            renderPaddles();
         }
 
 
-        /* =========================================================
-           BALL UPDATE
-        ========================================================== */
-
-        function updateBall(
-            deltaTime
+        else if (
+            event.key ===
+            'ArrowRight' ||
+            key === 'd'
         ) {
 
-            const moveX =
-                ballSpeedX *
-                deltaTime /
-                1000;
+            setMovement(
+                'ArrowRight',
+                true
+            );
+
+            event.preventDefault();
+        }
+
+    }
+);
 
 
-            const moveY =
-                ballSpeedY *
-                deltaTime /
-                1000;
+document.addEventListener(
+    'keyup',
+    (event) => {
+
+        const key =
+            event.key.toLowerCase();
 
 
-            ballX += moveX;
-            ballY += moveY;
+        if (
+            event.key ===
+            'ArrowLeft' ||
+            key === 'a'
+        ) {
+
+            keys.ArrowLeft =
+                false;
+
+        }
 
 
-            /* -----------------------------------------------
-               DINDING KIRI / KANAN
-            ------------------------------------------------ */
+        else if (
+            event.key ===
+            'ArrowRight' ||
+            key === 'd'
+        ) {
 
-            if (
-                ballX < 0 ||
-                ballX >
-                boardWidth -
-                ballSize
-            ) {
+            keys.ArrowRight =
+                false;
+        }
 
-                ballSpeedX *= -1;
+    }
+);
+
+
+/* =========================================================
+   TOUCH BUTTON
+========================================================= */
+
+function startMoveLeft(event) {
+
+    event.preventDefault();
+
+    leftButton.classList.add(
+        'active'
+    );
+
+    setMovement(
+        'ArrowLeft',
+        true
+    );
+}
+
+
+function startMoveRight(event) {
+
+    event.preventDefault();
+
+    rightButton.classList.add(
+        'active'
+    );
+
+    setMovement(
+        'ArrowRight',
+        true
+    );
+}
+
+
+function stopMove(event) {
+
+    if (event) {
+
+        event.preventDefault();
+    }
+
+
+    keys.ArrowLeft =
+        false;
+
+    keys.ArrowRight =
+        false;
+
+
+    leftButton.classList.remove(
+        'active'
+    );
+
+    rightButton.classList.remove(
+        'active'
+    );
+}
+
+
+/*
+    Pointer Events:
+    bekerja untuk HP + mouse.
+*/
+
+leftButton.addEventListener(
+    'pointerdown',
+    startMoveLeft
+);
+
+
+rightButton.addEventListener(
+    'pointerdown',
+    startMoveRight
+);
+
+
+leftButton.addEventListener(
+    'pointerup',
+    stopMove
+);
+
+
+rightButton.addEventListener(
+    'pointerup',
+    stopMove
+);
+
+
+leftButton.addEventListener(
+    'pointercancel',
+    stopMove
+);
+
+
+rightButton.addEventListener(
+    'pointercancel',
+    stopMove
+);
+
+
+leftButton.addEventListener(
+    'pointerleave',
+    stopMove
+);
+
+
+rightButton.addEventListener(
+    'pointerleave',
+    stopMove
+);
+
+
+/*
+    Kalau jari keluar layar
+    saat tombol masih ditekan,
+    pastikan movement berhenti.
+*/
+
+document.addEventListener(
+    'pointerup',
+    stopMove
+);
+
+
+/* =========================================================
+   TIMER CLEANUP
+========================================================= */
+
+function clearAllTimers() {
+
+    if (
+        countdownTimer
+    ) {
+
+        clearInterval(
+            countdownTimer
+        );
+
+        countdownTimer =
+            null;
+    }
+
+
+    for (
+        const timer of
+        transitionTimers
+    ) {
+
+        clearTimeout(
+            timer
+        );
+    }
+
+
+    transitionTimers =
+        [];
+}
+
+
+/* =========================================================
+   RESET PADDLES
+========================================================= */
+
+function resetPaddles() {
+
+    playerX =
+        boardWidth / 2 -
+        paddleWidth / 2;
+
+
+    opponentX =
+        boardWidth / 2 -
+        paddleWidth / 2;
+
+
+    bottomPaddle.style.left =
+        `${playerX}px`;
+
+
+    topPaddle.style.left =
+        `${opponentX}px`;
+}
+
+
+/* =========================================================
+   BALL POSITION
+========================================================= */
+
+function updateBallPosition() {
+
+    ballElement.style.left =
+        `${ballX}px`;
+
+    ballElement.style.top =
+        `${ballY}px`;
+}
+
+
+/* =========================================================
+   COUNTDOWN
+========================================================= */
+
+function startCountdown(
+    directionTo
+) {
+
+    clearAllTimers();
+
+
+    isGameRunning =
+        false;
+
+    isPaused =
+        true;
+
+
+    resetInputState();
+
+    clearParticles();
+
+
+    countdownDisplay.style.display =
+        'block';
+
+
+    let count = 3;
+
+
+    ballX =
+        boardWidth / 2 -
+        ballSize / 2;
+
+
+    ballY =
+        STARTING_BALL_Y;
+
+
+    ballSpeedX =
+        0;
+
+    ballSpeedY =
+        0;
+
+
+    ballElement.style.opacity =
+        '1';
+
+
+    ballElement.style.transform =
+        'translateZ(0)';
+
+
+    updateBallPosition();
+
+
+    resetPaddles();
+
+
+    countdownDisplay.textContent =
+        count;
+
+
+    countdownTimer =
+        setInterval(
+            () => {
+
+                count--;
+
+
+                if (
+                    count > 0
+                ) {
+
+                    countdownDisplay.textContent =
+                        count;
+
+                }
+
+
+                else {
+
+                    clearInterval(
+                        countdownTimer
+                    );
+
+                    countdownTimer =
+                        null;
+
+
+                    countdownDisplay.textContent =
+                        'FOKUS!';
+
+
+                    const timer =
+                        setTimeout(
+                            () => {
+
+                                countdownDisplay.style.display =
+                                    'none';
+
+
+                                launchBall(
+                                    directionTo,
+                                    playerScore
+                                );
+
+
+                                lastTimestamp =
+                                    0;
+
+
+                                startGameLoop();
+
+                            },
+                            450
+                        );
+
+
+                    transitionTimers.push(
+                        timer
+                    );
+                }
+
+            },
+            700
+        );
+}
+
+
+/* =========================================================
+   SCORE TRANSITION
+========================================================= */
+
+function launchTransition(
+    directionTo
+) {
+
+    isGameRunning =
+        false;
+
+    isPaused =
+        true;
+
+
+    resetInputState();
+
+    clearParticles();
+
+
+    triggerScoreVFX(
+        directionTo === 1
+    );
+
+
+    triggerBallExplosion();
+
+
+    countdownDisplay.style.display =
+        'block';
+
+
+    countdownDisplay.textContent =
+        '1';
+
+
+    const resetTimer =
+        setTimeout(
+            () => {
 
                 ballX =
-                    ballX < 0
-                        ? 0
-                        : boardWidth -
-                          ballSize;
+                    boardWidth / 2 -
+                    ballSize / 2;
 
-                playWallSFX();
-            }
 
+                ballY =
+                    STARTING_BALL_Y;
 
-            /* -----------------------------------------------
-               PADDLE PLAYER
-            ------------------------------------------------ */
 
-            const bottomPaddleTop =
-                boardHeight -
-                20 -
-                paddleHeight;
+                ballSpeedX =
+                    0;
 
+                ballSpeedY =
+                    0;
 
-            const bottomPaddleBottom =
-                bottomPaddleTop +
-                paddleHeight;
 
+                ballElement.style.opacity =
+                    '1';
 
-            if (
-                ballY +
-                ballSize >=
-                bottomPaddleTop &&
 
-                ballSpeedY > 0 &&
+                ballElement.style.transform =
+                    'translateZ(0)';
 
-                ballY <
-                bottomPaddleBottom
-            ) {
 
-                if (
-                    ballX +
-                    ballSize >
-                    playerX &&
+                updateBallPosition();
 
-                    ballX <
-                    playerX +
-                    paddleWidth
-                ) {
+            },
+            180
+        );
 
-                    triggerPaddleVFX(
-                        bottomPaddle,
-                        'paddle-bounce-focus'
-                    );
 
-                    playPaddleSFX(true);
+    transitionTimers.push(
+        resetTimer
+    );
 
 
-                    ballSpeedY *= -1;
+    resetPaddles();
 
 
-                    const hitPoint =
-                        (
-                            ballX +
-                            ballSize / 2
-                        ) -
-                        (
-                            playerX +
-                            paddleWidth / 2
-                        );
+    const focusTimer =
+        setTimeout(
+            () => {
 
+                countdownDisplay.textContent =
+                    'FOKUS!';
 
-                    ballSpeedX +=
-                        hitPoint * 10;
+            },
+            600
+        );
 
 
-                    ballSpeedX *= 1.075;
-                    ballSpeedY *= 1.075;
+    transitionTimers.push(
+        focusTimer
+    );
 
 
-                    ballY =
-                        bottomPaddleTop -
-                        ballSize;
+    const startTimer =
+        setTimeout(
+            () => {
 
+                countdownDisplay.style.display =
+                    'none';
 
-                    return;
-                }
-            }
 
+                const currentScore =
+                    directionTo === 1
+                        ? playerScore
+                        : opponentScore;
 
-            /* -----------------------------------------------
-               PADDLE STRES
-            ------------------------------------------------ */
 
-            const topPaddleBottom =
-                20 +
-                paddleHeight;
-
-
-            if (
-                ballY <=
-                topPaddleBottom &&
-
-                ballSpeedY < 0
-            ) {
-
-                if (
-                    ballX +
-                    ballSize >
-                    opponentX &&
-
-                    ballX <
-                    opponentX +
-                    paddleWidth
-                ) {
-
-                    triggerPaddleVFX(
-                        topPaddle,
-                        'paddle-bounce-stress'
-                    );
-
-                    playPaddleSFX(false);
-
-
-                    ballSpeedY *= -1;
-
-
-                    const hitPoint =
-                        (
-                            ballX +
-                            ballSize / 2
-                        ) -
-                        (
-                            opponentX +
-                            paddleWidth / 2
-                        );
-
-
-                    ballSpeedX +=
-                        hitPoint * 10;
-
-
-                    ballSpeedX *= 1.075;
-                    ballSpeedY *= 1.075;
-
-
-                    ballY =
-                        topPaddleBottom;
-
-
-                    return;
-                }
-            }
-
-
-            /* -----------------------------------------------
-               PLAYER SCORE
-            ------------------------------------------------ */
-
-            if (
-                ballY < 0
-            ) {
-
-                playerScore++;
-
-
-                playerScoreElement.textContent =
-                    `PLAYER (Kamu): ${playerScore}`;
-
-
-                opponentSpeedMultiplier +=
-                    SPEED_INCREMENT_PER_POINT;
-
-
-                playScoreSFX(true);
-
-
-                if (
-                    playerScore >=
-                    maxScore
-                ) {
-
-                    gameOver(
-                        `PLAYER berhasil mengalahkan STRES!`
-                    );
-
-                } else {
-
-                    launchTransition(1);
-                }
-
-
-                return;
-            }
-
-
-            /* -----------------------------------------------
-               STRES SCORE
-            ------------------------------------------------ */
-
-            if (
-                ballY >
-                boardHeight -
-                ballSize
-            ) {
-
-                opponentScore++;
-
-
-                opponentScoreElement.textContent =
-                    `STRES (Musuh): ${opponentScore}`;
-
-
-                playScoreSFX(false);
-
-
-                if (
-                    opponentScore >=
-                    maxScore
-                ) {
-
-                    gameOver(
-                        `STRES telah menguasai!`
-                    );
-
-                } else {
-
-                    launchTransition(-1);
-                }
-
-
-                return;
-            }
-
-
-            /* -----------------------------------------------
-               BATASI KECEPATAN
-            ------------------------------------------------ */
-
-            const currentSpeed =
-                Math.sqrt(
-                    ballSpeedX ** 2 +
-                    ballSpeedY ** 2
+                launchBall(
+                    directionTo,
+                    currentScore
                 );
 
 
-            const maxSpeed =
-                2.0 *
-                initialBallSpeed;
+                lastTimestamp =
+                    0;
 
 
-            if (
-                currentSpeed >
-                maxSpeed
-            ) {
+                startGameLoop();
 
-                const ratio =
-                    maxSpeed /
-                    currentSpeed;
-
-                ballSpeedX *= ratio;
-                ballSpeedY *= ratio;
-            }
+            },
+            1050
+        );
 
 
-            renderBall();
-        }
+    transitionTimers.push(
+        startTimer
+    );
+}
 
 
-        /* =========================================================
-           LAUNCH BALL
-        ========================================================== */
+/* =========================================================
+   LAUNCH BALL
+========================================================= */
 
-        function launchBall(
-            directionTo,
-            scoringPlayerScore
+function launchBall(
+    directionTo,
+    scoringPlayerScore
+) {
+
+    ballSpeedY =
+        initialBallSpeed *
+        directionTo;
+
+
+    let horizontalDirection;
+
+
+    if (
+        scoringPlayerScore % 2 === 0
+    ) {
+
+        horizontalDirection =
+            1;
+
+    } else {
+
+        horizontalDirection =
+            -1;
+    }
+
+
+    ballSpeedX =
+        horizontalDirection *
+        initialBallSpeed *
+        (
+            Math.random() *
+            0.5 +
+            0.5
+        );
+
+
+    const currentSpeed =
+        Math.hypot(
+            ballSpeedX,
+            ballSpeedY
+        );
+
+
+    if (
+        currentSpeed >
+        initialBallSpeed * 1.05
+    ) {
+
+        const ratio =
+            initialBallSpeed /
+            currentSpeed;
+
+
+        ballSpeedX *=
+            ratio;
+
+        ballSpeedY *=
+            ratio;
+    }
+
+
+    isPaused =
+        false;
+
+    isGameRunning =
+        true;
+
+    lastTimestamp =
+        0;
+}
+
+
+/* =========================================================
+   PLAYER UPDATE
+========================================================= */
+
+function updatePlayer(
+    deltaTime
+) {
+
+    const actualSpeed =
+        FIXED_PADDLE_SPEED *
+        deltaTime /
+        1000;
+
+
+    if (
+        keys.ArrowLeft
+    ) {
+
+        playerX -=
+            actualSpeed;
+    }
+
+
+    if (
+        keys.ArrowRight
+    ) {
+
+        playerX +=
+            actualSpeed;
+    }
+
+
+    if (
+        playerX < 0
+    ) {
+
+        playerX =
+            0;
+    }
+
+
+    if (
+        playerX >
+        boardWidth -
+        paddleWidth
+    ) {
+
+        playerX =
+            boardWidth -
+            paddleWidth;
+    }
+
+
+    bottomPaddle.style.left =
+        `${playerX}px`;
+}
+
+
+/* =========================================================
+   AI UPDATE
+========================================================= */
+
+function updateOpponent(
+    deltaTime
+) {
+
+    const opponentCenter =
+        opponentX +
+        paddleWidth / 2;
+
+
+    const ballCenter =
+        ballX +
+        ballSize / 2;
+
+
+    const baseAISpeed =
+        initialBallSpeed *
+        0.98;
+
+
+    const aiSpeed =
+        baseAISpeed *
+        opponentSpeedMultiplier *
+        deltaTime /
+        1000;
+
+
+    const margin =
+        2;
+
+
+    if (
+        ballSpeedY < 0
+    ) {
+
+        if (
+            ballCenter <
+            opponentCenter -
+            margin
         ) {
 
-            ballSpeedY =
-                initialBallSpeed *
-                directionTo;
+            opponentX -=
+                aiSpeed;
 
-
-            let horizontalDirection;
-
-
-            if (
-                scoringPlayerScore % 2 === 0
-            ) {
-
-                horizontalDirection = 1;
-
-            } else {
-
-                horizontalDirection = -1;
-            }
-
-
-            ballSpeedX =
-                horizontalDirection *
-                initialBallSpeed *
-                (
-                    Math.random() *
-                    0.5 +
-                    0.5
-                );
-
-
-            const currentSpeed =
-                Math.sqrt(
-                    ballSpeedX ** 2 +
-                    ballSpeedY ** 2
-                );
-
-
-            if (
-                currentSpeed >
-                initialBallSpeed *
-                1.05
-            ) {
-
-                const ratio =
-                    initialBallSpeed /
-                    currentSpeed;
-
-
-                ballSpeedX *= ratio;
-                ballSpeedY *= ratio;
-            }
-
-
-            isPaused = false;
-            isGameRunning = true;
-
-            lastTimestamp = 0;
-
-            renderBall();
         }
 
 
-        /* =========================================================
-           RESET BALL
-        ========================================================== */
+        else if (
+            ballCenter >
+            opponentCenter +
+            margin
+        ) {
 
-        function resetBallPosition() {
+            opponentX +=
+                aiSpeed;
+        }
+    }
 
-            ballX =
-                (board
+
+    if (
+        opponentX < 0
+    ) {
+
+        opponentX =
+            0;
+    }
+
+
+    if (
+        opponentX >
+        boardWidth -
+        paddleWidth
+    ) {
+
+        opponentX =
+            boardWidth -
+            paddleWidth;
+    }
+
+
+    topPaddle.style.left =
+        `${opponentX}px`;
+}
+
+
+/* =========================================================
+   BALL UPDATE
+========================================================= */
+
+function updateBall(
+    deltaTime
+) {
+
+    const moveX =
+        ballSpeedX *
+        deltaTime /
+        1000;
+
+
+    const moveY =
+        ballSpeedY *
+        deltaTime /
+        1000;
+
+
+    ballX +=
+        moveX;
+
+
+    ballY +=
+        moveY;
+
+
+    /* =====================================================
+       WALL
+    ====================================================== */
+
+    if (
+        ballX < 0 ||
+        ballX >
+        boardWidth -
+        ballSize
+    ) {
+
+        ballSpeedX *=
+            -1;
+
+
+        ballX =
+            ballX < 0
+                ? 0
+                : boardWidth -
+                  ballSize;
+    }
+
+
+    /* =====================================================
+       PLAYER PADDLE
+    ====================================================== */
+
+    const playerPaddleTop =
+        boardHeight -
+        20 -
+        paddleHeight;
+
+
+    if (
+        ballY +
+        ballSize >=
+        playerPaddleTop &&
+
+        ballSpeedY > 0 &&
+
+        ballY <
+        playerPaddleTop +
+        paddleHeight
+    ) {
+
+        if (
+            ballX +
+            ballSize >
+            playerX &&
+
+            ballX <
+            playerX +
+            paddleWidth
+        ) {
+
+            triggerPaddleVFX(
+                bottomPaddle,
+                'paddle-bounce-focus'
+            );
+
+
+            ballSpeedY *=
+                -1;
+
+
+            const hitPoint =
+                (
+                    ballX +
+                    ballSize / 2
+                ) -
+                (
+                    playerX +
+                    paddleWidth / 2
+                );
+
+
+            ballSpeedX +=
+                hitPoint *
+                10;
+
+
+            ballSpeedX *=
+                1.075;
+
+
+            ballSpeedY *=
+                1.075;
+
+
+            ballY =
+                playerPaddleTop -
+                ballSize;
+
+
+            return;
+        }
+    }
+
+
+    /* =====================================================
+       AI PADDLE
+    ====================================================== */
+
+    const topPaddleTop =
+        20;
+
+
+    const topPaddleBottom =
+        topPaddleTop +
+        paddleHeight;
+
+
+    if (
+        ballY <=
+        topPaddleBottom &&
+
+        ballSpeedY < 0
+    ) {
+
+        if (
+            ballX +
+            ballSize >
+            opponentX &&
+
+            ballX <
+            opponentX +
+            paddleWidth
+        ) {
+
+            triggerPaddleVFX(
+                topPaddle,
+                'paddle-bounce-stress'
+            );
+
+
+            ballSpeedY *=
+                -1;
+
+
+            const hitPoint =
+                (
+                    ballX +
+                    ballSize / 2
+                ) -
+                (
+                    opponentX +
+                    paddleWidth / 2
+                );
+
+
+            ballSpeedX +=
+                hitPoint *
+                10;
+
+
+            ballSpeedX *=
+                1.075;
+
+
+            ballSpeedY *=
+                1.075;
+
+
+            ballY =
+                topPaddleBottom;
+
+
+            return;
+        }
+    }
+
+
+    /* =====================================================
+       PLAYER SCORE
+    ====================================================== */
+
+    if (
+        ballY < 0
+    ) {
+
+        playerScore++;
+
+
+        playerScoreElement.textContent =
+            `PLAYER (Kamu): ${playerScore}`;
+
+
+        opponentSpeedMultiplier +=
+            SPEED_INCREMENT_PER_POINT;
+
+
+        if (
+            playerScore >=
+            maxScore
+        ) {
+
+            gameOver(
+                true
+            );
+
+        }
+
+
+        else {
+
+            launchTransition(
+                1
+            );
+        }
+
+
+        return;
+    }
+
+
+    /* =====================================================
+       STRES SCORE
+    ====================================================== */
+
+    if (
+        ballY >
+        boardHeight -
+        ballSize
+    ) {
+
+        opponentScore++;
+
+
+        opponentScoreElement.textContent =
+            `STRES (Musuh): ${opponentScore}`;
+
+
+        if (
+            opponentScore >=
+            maxScore
+        ) {
+
+            gameOver(
+                false
+            );
+
+        }
+
+
+        else {
+
+            launchTransition(
+                -1
+            );
+        }
+
+
+        return;
+    }
+
+
+    /* =====================================================
+       SPEED LIMIT
+    ====================================================== */
+
+    const currentSpeed =
+        Math.hypot(
+            ballSpeedX,
+            ballSpeedY
+        );
+
+
+    const maxSpeed =
+        2 *
+        initialBallSpeed;
+
+
+    if (
+        currentSpeed >
+        maxSpeed
+    ) {
+
+        const ratio =
+            maxSpeed /
+            currentSpeed;
+
+
+        ballSpeedX *=
+            ratio;
+
+
+        ballSpeedY *=
+            ratio;
+    }
+
+
+    updateBallPosition();
+}
+
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+function gameOver(
+    playerWon
+) {
+
+    isGameRunning =
+        false;
+
+    isPaused =
+        true;
+
+
+    resetInputState();
+
+    clearParticles();
+
+
+    if (
+        playerWon
+    ) {
+
+        messageText.textContent =
+            '✨ KEMENANGAN FOKUS! ✨';
+
+    }
+
+
+    else {
+
+        messageText.textContent =
+            '🚨 DIKUASAI STRES! 🚨';
+    }
+
+
+    finalScore.textContent =
+        `${playerScore} - ${opponentScore}`;
+
+
+    gameMessage.style.display =
+        'flex';
+}
+
+
+/* =========================================================
+   RESET GAME
+========================================================= */
+
+function resetGame() {
+
+    clearAllTimers();
+
+
+    isGameRunning =
+        false;
+
+    isPaused =
+        true;
+
+
+    playerScore =
+        0;
+
+    opponentScore =
+        0;
+
+
+    opponentSpeedMultiplier =
+        1;
+
+
+    playerScoreElement.textContent =
+        'PLAYER (Kamu): 0';
+
+
+    opponentScoreElement.textContent =
+        'STRES (Musuh): 0';
+
+
+    gameMessage.style.display =
+        'none';
+
+
+    ballElement.style.opacity =
+        '1';
+
+
+    ballElement.style.transform =
+        'translateZ(0)';
+
+
+    resetInputState();
+
+    clearParticles();
+
+    resetPaddles();
+
+
+    startCountdown(
+        1
+    );
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function startGameLoop() {
+
+    if (
+        animationFrameId !== null
+    ) {
+
+        cancelAnimationFrame(
+            animationFrameId
+        );
+    }
+
+
+    lastTimestamp =
+        0;
+
+
+    animationFrameId =
+        requestAnimationFrame(
+            gameLoop
+        );
+}
+
+
+function gameLoop(timestamp) {
+
+    if (
+        !isGameRunning ||
+        isPaused
+    ) {
+
+        animationFrameId =
+            requestAnimationFrame(
+                gameLoop
+            );
+
+        return;
+    }
+
+
+    if (
+        lastTimestamp === 0
+    ) {
+
+        lastTimestamp =
+            timestamp;
+    }
+
+
+    let deltaTime =
+        timestamp -
+        lastTimestamp;
+
+
+    lastTimestamp =
+        timestamp;
+
+
+    /*
+        Maksimal 40ms.
+
+        Jadi kalau HP sempat
+        drop frame, bola tidak
+        teleport.
+    */
+
+    if (
+        deltaTime > 40
+    ) {
+
+        deltaTime =
+            40;
+    }
+
+
+    /* GAME */
+
+    updatePlayer(
+        deltaTime
+    );
+
+
+    updateOpponent(
+        deltaTime
+    );
+
+
+    updateBall(
+        deltaTime
+    );
+
+
+    /* VFX */
+
+    updatePaddleTrail();
+
+
+    spawnParticle(
+        timestamp
+    );
+
+
+    updateParticles(
+        deltaTime
+    );
+
+
+    animationFrameId =
+        requestAnimationFrame(
+            gameLoop
+        );
+}
+
+
+/* =========================================================
+   RETRY
+========================================================= */
+
+retryButton.addEventListener(
+    'click',
+    resetGame
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+resetGame();
+
+</script>
+
+</body>
+</html>
