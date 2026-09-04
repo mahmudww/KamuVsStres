@@ -511,40 +511,49 @@ body {
 
 .touch-button {
     flex: 1;
-
     min-width: 0;
 
-    padding: 12px 5px;
+    height: 64px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     background: var(--color-bg-light);
-
     color: var(--color-focus);
 
     font-weight: bold;
+    font-size: 1rem;
 
     text-align: center;
 
-    border-radius: 12px;
+    border-radius: 14px;
 
     user-select: none;
-
     -webkit-user-select: none;
 
     touch-action: none;
 
     box-shadow:
-        -3px -3px 7px rgba(45, 45, 60, 0.35),
-        3px 3px 7px rgba(0, 0, 0, 0.7),
-        0 0 5px rgba(78, 205, 196, 0.35);
+        -4px -4px 8px rgba(45, 45, 60, 0.4),
+        4px 4px 8px rgba(0, 0, 0, 0.8),
+        0 0 7px rgba(78, 205, 196, 0.4);
+
+    transition:
+        transform 0.08s ease,
+        background-color 0.08s ease,
+        box-shadow 0.08s ease;
 }
 
 .touch-button.active {
     background: var(--color-focus);
-
     color: var(--color-bg-dark);
 
+    transform: scale(0.96);
+
     box-shadow:
-        inset 2px 2px 5px rgba(0, 0, 0, 0.7);
+        inset 3px 3px 6px rgba(0, 0, 0, 0.7),
+        0 0 15px rgba(78, 205, 196, 0.7);
 }
 
 /* =========================
@@ -576,9 +585,9 @@ body {
         margin-top: 7px;
     }
 
-    .touch-button {
-        padding: 10px 3px;
-        font-size: 0.85rem;
+     .touch-button {
+        height: 68px;
+        font-size: 1rem;
     }
 }
 
